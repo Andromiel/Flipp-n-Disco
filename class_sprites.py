@@ -33,6 +33,24 @@ class Ball(pygame.sprite.Sprite):
             self.speed_y = random.choice([-5, 5])
             self.started = True
 
+class Flipper(pygame.sprite.Sprite):
+    def __init__(self, x, image_path):
+        super().__init__()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect(center=(x, screen_height - 50))
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d] and self.rect.x > screen_width // 2:
+            self.rect.x -= 5
+        if keys[pygame.K_k] and self.rect.x < screen_width // 2:
+            self.rect.x += 5
+
+flipper_left = Flipper(screen_width // 3, 'images/flipper.png')
+flipper_right = Flipper(screen_width * 2 // 3, 'images/flipper.png')
+
+all_sprites = pygame.sprite.Group()
+all_sprites.add(flipper_left, flipper_right)
 screen = pygame.display.set_mode([screen_width, screen_height])
 pygame.display.set_caption("Flip'n Disco")
 
