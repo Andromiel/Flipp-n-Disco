@@ -23,7 +23,7 @@ pygame.init()
 
 # Set the width and height of the screen [width, height]
 
-WIDTH = 1000
+WIDTH = 800
 HEIGHT = 700
 size = (WIDTH, HEIGHT)
 screen = pygame.display.set_mode(size)
@@ -50,26 +50,29 @@ print(SegmentIntersection(np.array((1, 1)), np.array((3, 2)), np.array((2.5, 0))
 engine = PhysicsEngine()
 #engine.convex_polygons.append(ConvexPolygon(*[np.array((np.cos(i*np.pi/8), np.sin(i*np.pi/8)))*40 for i in range(16)]))
 #engine.convex_polygons[-1].Translate((200, 200))
-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True))
+engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
 engine.convex_polygons[-1].Translate((-WIDTH/2, HEIGHT/2))
-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True))
+engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
 engine.convex_polygons[-1].Translate((WIDTH/2, -HEIGHT/2))
-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True))
+engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
 engine.convex_polygons[-1].Translate((WIDTH/2, HEIGHT*1.5))
-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True))
+engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
 engine.convex_polygons[-1].Translate((WIDTH*1.5, HEIGHT/2))
 
-for i in range(2):
-    engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 100), (100, 0), (0, 100)))
-    print(engine.convex_polygons[-1].mean_point)
-engine.convex_polygons.append(ConvexPolygon((0, 0), (400, 100), (400, 0), (0, 100), fixed=True))
-engine.convex_polygons[-1].Translate((500, 400))
-engine.convex_polygons[-1].Rotate(-0.0)
-engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 150), (100, -20), (0, 10), fixed=True))
-engine.convex_polygons[-2].Translate((100, 100))
-engine.convex_polygons[-2].velocity = np.array((100, 0))
-engine.convex_polygons[-1].Translate((300, 100))
-engine.convex_polygons[-3].Translate((400, 300))
+for i in range(1):
+    #engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 100), (100, 0), (0, 100)))
+    engine.balls.append(Ball(i*200+250, 300, 55, 1))
+
+engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
+engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
+engine.convex_polygons[-2].Translate((WIDTH/2.0 + 150, 600))
+engine.convex_polygons[-1].Translate((WIDTH/2.0 - 150, 600))
+engine.convex_polygons[-1].Rotate(np.pi)
+engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 0),(100, 10)))#dummy
+engine.convex_polygons[-1].Translate((WIDTH/2.0 + 150, 300))
+
+
+engine.convex_polygons.append(ConvexPolygon((0, 0), (1, 0),(0, 1)))#dummy
 
 
 
@@ -95,42 +98,36 @@ while not done:
     screen.fill(BLACK)
     #polygon.DisplayPoints(screen)
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
-        engine.convex_polygons[1].Translate((0, 1))
-    if keys[pygame.K_DOWN]:
-        engine.convex_polygons[1].Translate((0, -1))
-    if keys[pygame.K_LEFT]:
-        engine.convex_polygons[1].Translate((1, 0))
-    if keys[pygame.K_RIGHT]:
-        engine.convex_polygons[1].Translate((-1, 0))
     if keys[pygame.K_SPACE]:
-        engine.convex_polygons.append(ConvexPolygon((0, 0), (0, 100), (100, 100), (100, 0)))
-        engine.convex_polygons[-1].Translate(np.array(pygame.mouse.get_pos()))
-        time.sleep(1)
+        if(engine.convex_polygons[5].rotation>np.pi/2.0):
+            engine.convex_polygons[5].rotational_velocity = -6.0
+        else:
+            engine.convex_polygons[5].rotational_velocity = 0
+
+        if (engine.convex_polygons[4].rotation < np.pi / 2.0):
+            engine.convex_polygons[4].rotational_velocity = 6.0
+        else:
+            engine.convex_polygons[4].rotational_velocity = 0
+    else:
+        if engine.convex_polygons[5].rotation<np.pi:
+            engine.convex_polygons[5].rotational_velocity = 6.0
+        else:
+            engine.convex_polygons[5].rotational_velocity = 0
+        if engine.convex_polygons[4].rotation>0:
+            engine.convex_polygons[4].rotational_velocity = -6.0
+        else:
+            engine.convex_polygons[4].rotational_velocity = 0
+
+    if pygame.mouse.get_pressed()[0]:
+        engine.convex_polygons.insert(-1, ConvexPolygon((0, 0), (40, 0), (40, 40), (0, 40), fixed=True))
+        engine.convex_polygons[-2].Translate((pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
+        time.sleep(0.2)
+
     delta_time = time.time()-now_time
     now_time += delta_time
     engine.Update(screen, delta_time)
 
-    '''if keys[pygame.K_SPACE]:
-        polygon.DisplayAllPoints(screen)
-    if keys[pygame.K_LCTRL]:
-        polygon = ConvexPolygon(*[(rd.randint(100, 400), rd.randint(100, 400)) for i in range(100)])
-        polygon.Translate(np.array((300, 300)))'''
 
-    '''
-    ball_list.Update()
-
-    for i in range(len(ball_list.balls)):
-        pygame.draw.circle(screen, (0, 255, 0), (WIDTH - ball_list.balls[i].position[0], HEIGHT - ball_list.balls[i].position[1]), ball_list.balls[i].radius)
-        if (ball_list.balls[i].position[0] + ball_list.balls[i].radius >= WIDTH):
-            ball_list.balls[i].velocity[0] = -abs(ball_list.balls[i].velocity[0])
-        if (ball_list.balls[i].position[0] - ball_list.balls[i].radius <= 0):
-            ball_list.balls[i].velocity[0] = abs(ball_list.balls[i].velocity[0])
-        if (ball_list.balls[i].position[1] + ball_list.balls[i].radius >= HEIGHT):
-            ball_list.balls[i].velocity[1] = -abs(ball_list.balls[i].velocity[1])
-        if (ball_list.balls[i].position[1] - ball_list.balls[i].radius <= 0):
-            ball_list.balls[i].velocity[1] = abs(ball_list.balls[i].velocity[1])
-    '''
 
     # --- Drawing code should go here
 
