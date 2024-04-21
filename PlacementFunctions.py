@@ -34,7 +34,7 @@ class MapObject:
     def collidesmouse(self):
         mouse_pos = pygame.mouse.get_pos()
         pos_distance = (mouse_pos[0]-self.rect.x, mouse_pos[1]-self.rect.y)
-        self.mouseoffset = (self.rect.x - mouse_pos[0], self.rect.y - mouse_pos[1])
+        self.mouseoffset = (self.rect.center[0] - mouse_pos[0], self.rect.center[1] - mouse_pos[1])
         return self.rect.collidepoint(mouse_pos) and self.mask.get_at(pos_distance)
 
     def resize(self, size):
@@ -60,7 +60,7 @@ class MapObject:
         mouse_pos = pygame.mouse.get_pos()
 
         if self.reposition == REPOS_OBJECT:
-            self.move_at(mouse_pos+self.mouseoffset)
+            self.move_at(mouse_pos+pygame.Vector2(self.mouseoffset))
         elif self.reposition == REPOS_ROTATION_CENTER:
             self.rotationcenter = mouse_pos
             self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)
