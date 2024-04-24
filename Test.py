@@ -10,6 +10,12 @@ Objects = [Disk, Ball, Flipper]
 loop = True
 angle = 360
 count = 0
+pygame.transform.scale2x(screen)
+pygame.transform.scale2x(screen)
+pygame.transform.scale2x(screen)
+
+
+
 
 while loop:
     screen.fill((30, 90, 120))

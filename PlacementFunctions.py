@@ -14,7 +14,8 @@ class MapObject:
         self.mask = pygame.mask.from_surface(self.img)
         self.rotationcenter = self.rect.center
         self.mouseoffset = (0,0)
-        self.angle = 0
+        self.img_angle = 0
+        self.rotation_vec_angle = 0
         self.rotating = False
 
     def display(self, surface):
@@ -43,18 +44,20 @@ class MapObject:
         self.img = self.rect.size
 
     def rotate_around_point(self, angle):
-        self.angle+=angle
-        rotated_img = pygame.transform.rotate(self.original_img, self.angle)
+        self.img_angle+=angle
+        self.rotation_vec_angle+=angle
+        rotated_img = pygame.transform.rotate(self.original_img, self.img_angle)
         origin_vec = pygame.Vector2(self.rect.center)
         pivot_vec = pygame.Vector2(self.rotationcenter)
         #origin_vec.from_polar((self.rect.center[0], self.rect.center[1]))
         #pivot_vec.from_polar((self.rotationcenter[0], self.rotationcenter[1]))
 
         offset = pivot_vec - origin_vec
-        new_center = pivot_vec - self.originaloffset.rotate(-self.angle)
+        new_center = pivot_vec - self.originaloffset.rotate(-self.rotation_vec_angle)
         self.rect = rotated_img.get_rect(center=new_center)
         self.img = rotated_img
         self.mask = pygame.mask.from_surface(self.img)
+
 
     def update(self, surface):
         mouse_pos = pygame.mouse.get_pos()
@@ -64,6 +67,7 @@ class MapObject:
         elif self.reposition == REPOS_ROTATION_CENTER:
             self.rotationcenter = mouse_pos
             self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)
+            self.rotation_vec_angle = 0
         self.display(surface)
 
 '''
