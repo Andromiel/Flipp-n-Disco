@@ -16,9 +16,6 @@ text1 = font.render("Option :", True, (255,255,255))
 text2_1 = font.render("Reposition", True, (255,255,255))
 text2_2 = font.render("Rescale", True, (255,255,255))
 text = text2_1
-pygame.transform.scale2x(screen)
-pygame.transform.scale2x(screen)
-pygame.transform.scale2x(screen)
 
 while loop:
     screen.fill((30, 90, 120))
