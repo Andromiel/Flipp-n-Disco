@@ -46,6 +46,19 @@ class Flipper(pygame.sprite.Sprite):
         if keys[pygame.K_k] and self.rect.x < screen_width // 2:
             self.rect.x += 5
 
+class Bumper(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('images/bumper1.png')  
+        self.image = pygame.transform.scale(self.image, (50, 50))  # DIMENSIONS A AJUSTER 
+        self.rect = self.image.get_rect(center=(x, y))
+        self.points = 100  # Points pour chaque collision
+    def handle_collision(self):
+        return self.points
+
+// aide à gérer les résultats des interactions entre la balle et les bumpers :
+
+
 flipper_left = Flipper(screen_width // 3, 'images/flipper.png')
 flipper_right = Flipper(screen_width * 2 // 3, 'images/flipper.png')
 
