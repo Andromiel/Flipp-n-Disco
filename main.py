@@ -21,11 +21,19 @@ play_button_rect.y = math.ceil(screen.get_height()-650)
 #charger notre bouton pour le lancement du mode custom
 custom_button = pygame.image.load('Custom button.png')
 custom_button = pygame.transform.scale(custom_button, (600,600))
-custom_button_rect = play_button.get_rect()
+custom_button_rect = custom_button.get_rect()
 custom_button_rect.x = math.ceil(screen.get_width()-560)
 custom_button_rect.y = math.ceil(screen.get_height()-350)
 
+level1_image = pygame.image.load('level 1.png')
+level1_image = pygame.transform.scale(level1_image, (600, 750))
+level1_rect = level1_image.get_rect()
+level1_rect.x = 0
+level1_rect.y = 0
+
+
 #chargement du jeu
+level1_active = False
 
 game=Game()
 running=True
@@ -36,9 +44,11 @@ while running:
     screen.blit(background, (0,0))
 
     #vérifier si le jeu a commencé
-    if game.is_playing:
-        #déclencher les instructions de la partie:
+    if level1_active:
+        screen.blit(level1_image, level1_rect)
+    elif game.is_playing:
         game.update(screen)
+
     #vérifier si le jeu n'a pas commencé:
     else:
         #ajout du menu
@@ -58,7 +68,7 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             #vérification si souris en collision avec bouton jouer
             if play_button_rect.collidepoint(event.pos):
-                #mettre le jeu en mode lancé
-                game.is_playing = True
+                level1_active = True
+                game.is_playing = False 
             #elif custom_button.collidepoint(event.pos):
                 #basculer sur le mode custom
