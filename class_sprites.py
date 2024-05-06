@@ -56,7 +56,27 @@ class Bumper(pygame.sprite.Sprite):
     def handle_collision(self):
         return self.points
 
-// aide à gérer les résultats des interactions entre la balle et les bumpers :
+#aide à gérer les résultats des interactions entre la balle et les bumpers 
+
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, image_path, position, size=(50, 50)):
+        super().__init__()
+        self.image = pygame.image.load(image_path)  # l'image de l'obstacle
+        self.image = pygame.transform.scale(self.image, size)  # Redimensionne l'image à la taille spécifiée
+        self.rect = self.image.get_rect()
+        self.rect.center = position  
+        self.hit_points = 1  # Nombre de coups nécessaires pour détruire l'obstacle
+    #def update(self, *args, **kwargs):
+        # Logique de mise à jour pour l'obstacle, peut être utilisée pour animations ou interactions
+        #pass
+
+    def handle_collision(self):
+        # Ce qui se passe quand la balle heurte l'obstacle
+        self.hit_points -= 1  # Décrémente les points de vie de l'obstacle
+        if self.hit_points <= 0:
+            self.kill()  # Supprime l'obstacle si les points de vie atteignent 0
+        return 100  # Retourne le score pour le joueur
+
 
 
 flipper_left = Flipper(screen_width // 3, 'images/flipper.png')
