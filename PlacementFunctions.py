@@ -6,11 +6,12 @@ REPOS_ROTATION_CENTER = 2
 RESCALE_OBJECT = 3
 
 class MapObject:
-    def __init__(self, img, posx=0, posy=0, rotationcenter=None):
-        self.original_img = img
-        self.img = img
+    def __init__(self, imgname, posx=0, posy=0, size=(20,20), rotationcenter=None):
+        self.imgname = imgname
+        self.img = pygame.transform.smoothscale(pygame.image.load("textures/"+imgname), size)
+        self.original_img = self.img
         self.reposition = 0
-        self.rect = img.get_rect()
+        self.rect = self.img.get_rect()
         self.rect.x, self.rect.y = posx, posy
         self.originaloffset = pygame.Vector2(0, 0)
         self.mask = pygame.mask.from_surface(self.img)
@@ -61,7 +62,7 @@ class MapObject:
         self.mouseoffset = (- self.rect.y + mouse_pos[0], - self.rect.y + mouse_pos[1])
         self.rect.size = abs(self.mouseoffset[0]), abs(self.mouseoffset[1])
         pygame.draw.rect(surface, (255, 50, 10), self.rect, 3)
-        self.img = pygame.transform.smoothscale(self.img, self.rect.size)
+        self.img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         print(self.mouseoffset[0], self.mouseoffset[1])
 
     def update(self, surface):

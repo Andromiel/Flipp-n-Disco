@@ -1,11 +1,12 @@
 from PlacementFunctions import *
 
+
 pygame.init()
 
 screen = pygame.display.set_mode((500,600))
-Ball = MapObject(pygame.transform.smoothscale(pygame.image.load("textures/ball.png"), (60,60)), 50,50)
-Disk = MapObject(pygame.transform.smoothscale(pygame.image.load("textures/disk.png"), (60,60)), 0,0)
-Flipper = MapObject(pygame.transform.smoothscale(pygame.image.load("textures/flipper.png"), (100,50)), 90,90)
+Ball = MapObject("ball.png", 60,60, (50,50))
+Disk = MapObject("disk.png", 0,0, (10,10))
+Flipper = MapObject("flipper.png", 100,50, (90,90))
 Objects = [Disk, Ball, Flipper]
 loop = True
 angle = 360
