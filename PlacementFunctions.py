@@ -7,7 +7,8 @@ REPOS_ROTATION_CENTER = 2
 RESCALE_OBJECT = 3
 
 class MapObject:
-    def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False):
+    def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0):
+        self.size = 1
         self.imgname = imgname
         self.img = img
         self.original_img = self.img
@@ -22,10 +23,8 @@ class MapObject:
         self.mask = pygame.mask.from_surface(self.img)
         self.rotationcenter = self.rect.center
         self.mouseoffset = (0,0)
-        self.angle = 0
+        self.angle = angle
         self.rotating = False
-
-        self.size = 1
         self.show_rotating_point = show_rotating_point
         self.move_at((posx, posy))
 

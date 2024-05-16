@@ -50,7 +50,7 @@ directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
 class GameComponent(MapObject):
-    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=Nonefg):
+    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):
         MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
         self.physics_engineID = [-1, -1]#type, index
 class Game:
@@ -290,6 +290,8 @@ while loop:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_s:
                             SaveContent(game.GameComponents, "LevelData.txt")
+                        elif event.key == pygame.K_l:
+                            game.GameComponents = ReadContent("LevelData.txt")
 
                 for event in events:
                     if event.type == pygame.KEYDOWN:
