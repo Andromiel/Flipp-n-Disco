@@ -1,0 +1,5 @@
+0,0;ball.png
+30,30;ball.png
+60,60;ball.png
+90,90;ball.png
+120,120;ball.png

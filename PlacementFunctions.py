@@ -3,19 +3,21 @@ import time
 
 REPOS_OBJECT = 1
 REPOS_ROTATION_CENTER = 2
+RESCALE_OBJECT = 3
+
 class MapObject:
-    def __init__(self, img, posx=0, posy=0, rotationcenter=None):
-        self.original_img = img
-        self.img = img
+    def __init__(self, imgname, posx=0, posy=0, size=(20,20), rotationcenter=None):
+        self.imgname = imgname
+        self.img = pygame.transform.smoothscale(pygame.image.load("textures/"+imgname), size)
+        self.original_img = self.img
         self.reposition = 0
-        self.rect = img.get_rect()
+        self.rect = self.img.get_rect()
         self.rect.x, self.rect.y = posx, posy
         self.originaloffset = pygame.Vector2(0, 0)
         self.mask = pygame.mask.from_surface(self.img)
         self.rotationcenter = self.rect.center
         self.mouseoffset = (0,0)
-        self.img_angle = 0
-        self.rotation_vec_angle = 0
+        self.angle = 0
         self.rotating = False
 
     def display(self, surface):
@@ -30,8 +32,6 @@ class MapObject:
         self.rect.center = pygame.Vector2(pos)
         self.rotationcenter = pos + offset
 
-
-
     def collidesmouse(self):
         mouse_pos = pygame.mouse.get_pos()
         pos_distance = (mouse_pos[0]-self.rect.x, mouse_pos[1]-self.rect.y)
@@ -44,20 +44,26 @@ class MapObject:
         self.img = self.rect.size
 
     def rotate_around_point(self, angle):
-        self.img_angle+=angle
-        self.rotation_vec_angle+=angle
-        rotated_img = pygame.transform.rotate(self.original_img, self.img_angle)
+        self.angle+=angle
+        rotated_img = pygame.transform.rotate(self.original_img, self.angle)
         origin_vec = pygame.Vector2(self.rect.center)
         pivot_vec = pygame.Vector2(self.rotationcenter)
         #origin_vec.from_polar((self.rect.center[0], self.rect.center[1]))
         #pivot_vec.from_polar((self.rotationcenter[0], self.rotationcenter[1]))
 
         offset = pivot_vec - origin_vec
-        new_center = pivot_vec - self.originaloffset.rotate(-self.rotation_vec_angle)
+        new_center = pivot_vec - self.originaloffset.rotate(-self.angle)
         self.rect = rotated_img.get_rect(center=new_center)
         self.img = rotated_img
         self.mask = pygame.mask.from_surface(self.img)
 
+    def rescale(self, surface):
+        mouse_pos = pygame.mouse.get_pos()
+        self.mouseoffset = (- self.rect.y + mouse_pos[0], - self.rect.y + mouse_pos[1])
+        self.rect.size = abs(self.mouseoffset[0]), abs(self.mouseoffset[1])
+        pygame.draw.rect(surface, (255, 50, 10), self.rect, 3)
+        self.img = pygame.transform.smoothscale(self.original_img, self.rect.size)
+        print(self.mouseoffset[0], self.mouseoffset[1])
 
     def update(self, surface):
         mouse_pos = pygame.mouse.get_pos()
@@ -67,7 +73,8 @@ class MapObject:
         elif self.reposition == REPOS_ROTATION_CENTER:
             self.rotationcenter = mouse_pos
             self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)
-            self.rotation_vec_angle = 0
+        elif self.reposition == RESCALE_OBJECT:
+            self.rescale(surface)
         self.display(surface)
 
 '''
