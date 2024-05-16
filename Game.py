@@ -342,6 +342,10 @@ while loop:
                     if event.type == pygame.MOUSEBUTTONDOWN and not collided:
                         selected_object = None, None
                         selected_objects.clear()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_m:
+                            for i in range(len(selected_objects)):
+                                selected_objects[i][0].flip_x_axis()
 
                 if selected_object[0] != None and len(selected_objects)==1:
                     object, index = selected_object
@@ -388,7 +392,7 @@ while loop:
     if game.GameState == PLAY:
         level_map = MapObject(level_map_tex, level_map_name, WIDTH/2, HEIGHT/2, (screen.get_size()))
 
-        n_levels = 8
+        n_levels = 5
         levels_numbers = []
 
         for i in range(n_levels):

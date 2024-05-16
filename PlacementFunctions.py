@@ -28,6 +28,8 @@ class MapObject:
         self.size = 1
         self.show_rotating_point = show_rotating_point
         self.move_at((posx, posy))
+
+        self.flipped = False
     def display(self, surface):
         surface.blit(self.img, self.rect)
         if self.show_rotating_point:
@@ -54,6 +56,8 @@ class MapObject:
         self.rect.center = center
         self.rotationcenter = self.rect.center + self.originaloffset*size
         self.img = pygame.transform.smoothscale(self.original_img, self.rect.size)
+        if self.flipped:
+            self.img = pygame.transform.flip(self.img, False, True)
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.mask = pygame.mask.from_surface(self.img)
 
@@ -66,6 +70,8 @@ class MapObject:
         new_center = pivot_vec - self.originaloffset.rotate(-angle)
         self.rect = rotated_img.get_rect(center=new_center)
         self.img = rotated_img
+        if self.flipped:
+            self.img = pygame.transform.flip(self.img, False, True)
         self.mask = pygame.mask.from_surface(self.img)
         self.originaloffset = self.originaloffset.rotate(-angle)
 
@@ -77,6 +83,8 @@ class MapObject:
         self.rect.size = abs(offset[0])*2, abs(offset[1])*2
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
+        if self.flipped:
+            self.img = pygame.transform.flip(self.img, False, True)
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
@@ -85,6 +93,8 @@ class MapObject:
         self.rect.size = abs(size[0]), abs(size[1])
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
+        if self.flipped:
+            self.img = pygame.transform.flip(self.img, False, True)
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
@@ -92,6 +102,9 @@ class MapObject:
         self.reposition = option
         if option == REPOS_OBJECT:
             self.mouseoffset = (pygame.Vector2(self.rect.center) - pygame.Vector2(pygame.mouse.get_pos()))
+    def flip_x_axis(self):
+        self.flipped = True
+        self.img = pygame.transform.flip(self.img, False, True)
     def update(self, surface):
         mouse_pos = pygame.mouse.get_pos()
 
