@@ -6,6 +6,8 @@ from PlacementFunctions import *
 
 import os
 
+from LevelLoader import *
+
 BALL = 0
 POLYGON = 1
 
@@ -48,7 +50,7 @@ directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
 class GameComponent(MapObject):
-    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None):
+    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=Nonefg):
         MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
         self.physics_engineID = [-1, -1]#type, index
 class Game:
@@ -177,6 +179,7 @@ while loop:
         wall_choose = MapObject(pygame.transform.smoothscale(wall_tex, (60,60 * (wall_tex.get_height()/wall_tex.get_width()))), wall_name, WIDTH/2 - 150,HEIGHT/2)
         wall_choose.move_at((WIDTH / 2 - 150, HEIGHT / 2))
 
+
         transparent_background.set_alpha(128)
         transparent_background.fill((0, 0, 0))
 
@@ -283,6 +286,11 @@ while loop:
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_c]:
                     copied_elements = selected_objects[:]
                     print("copied")
+                for event in events:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_s:
+                            SaveContent(game.GameComponents, "LevelData.txt")
+
                 for event in events:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_v:

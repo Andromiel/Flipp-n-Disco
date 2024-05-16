@@ -1,5 +1,5 @@
 from PlacementFunctions import *
-
+from Game import GameComponent
 
 def ReadContent(filename):
     level_data = open(filename, "r")
@@ -21,7 +21,7 @@ def ReadContent(filename):
         rotation_pos = attributes[3].split(",")
         rotation_pos = (int(rotation_pos[0]), int(rotation_pos[1]))
         angle = int(attributes[0])
-        object = MapObject(skin, pos[0], pos[1], size, rotation_pos, angle)
+        object = GameComponent(skin, pos[0], pos[1], size, rotation_pos, angle)
         list_objects.append(object)
     return list_objects
 
@@ -29,11 +29,12 @@ def SaveContent(list_game_object, filename):
     level_data = open(filename, "w")
     nb_objects = len(list_game_object)
     for i in range(nb_objects):
-        level_data.write(str(list_game_object[i].rect.x) + ',' + str(list_game_object[i].rect.y))
+        object = list_game_object[i]
+        level_data.write(str(object.rect.x) + ',' + str(list_game_object[i].rect.y))
         level_data.write(';' + object.imgname.replace("textures/", ''))
-        level_data.write(';'+str(object.size))
-        level_data.write(';'+str(object.rotationcenter))
-        level_data.write(';'+str(object.angle))
+        level_data.write(';'+str(object.rect.width)+','+str(object.rect.height))
+        level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))
+        level_data.write(';'+str(object.angle)+'\n')
     level_data.close()
 
 def DefaultContent(filename):
