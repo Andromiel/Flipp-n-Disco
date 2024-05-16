@@ -7,9 +7,8 @@ pygame.init()
 def GenerateMenu(level_list, surface):
     text_size = 20
     width, height = surface.get_size()
-    print(width, height)
     font = pygame.font.Font("freesansbold.ttf", text_size)
-    menu_rect = pygame.Rect(width//4, height//4, width//2, height//2)
+    menu_rect = pygame.Rect(width/4, height/4, width/2, height/2)
     scrollerbar_rect = pygame.Rect(menu_rect.right+50, menu_rect.y, 20, menu_rect.height)
     scroller_rect = pygame.Rect(scrollerbar_rect.x, scrollerbar_rect.y, scrollerbar_rect.width, scrollerbar_rect.height*3/len(level_list))
     text_rects = [pygame.Rect(menu_rect.width-35, menu_rect.top+menu_rect.height//4*(i+1), 70, 20) for i in range(len(level_list))]
@@ -23,7 +22,7 @@ def DisplayMenu(menu_data, surface):
         surface.blit(menu_data[4].render("Level  " + str(i + 1), False, (255,255,255), (0,0,0)), menu_data[3][i])
 def UpdateMenu(menu_data, surface):
     for i in range(len(menu_data[3])):
-        menu_data[3][i].y = menu_data[0].top+menu_data[0].height//4*(i+1)-menu_data[2].y*(menu_data[2].height//menu_data[1].height)
+        menu_data[3][i].y = menu_data[0].top+menu_data[0].height//4*(i+1)-menu_data[2].y
         print(menu_data[1].height//menu_data[2].height)
     DisplayMenu(menu_data, surface)
 
