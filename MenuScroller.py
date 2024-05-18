@@ -1,7 +1,7 @@
 import pygame
 
 scrolling = False
-list = [("Level" + str(i + 1)) for i in range(30)]
+list = [("Level" + str(i + 1)) for i in range(10)]
 pygame.init()
 
 
@@ -13,8 +13,13 @@ def GenerateMenu(level_list, surface):
     font = pygame.font.Font("freesansbold.ttf", text_size)
     menu_rect = pygame.Rect(width / 4, height / 4, width / 2, height / 2)
     scrollerbar_rect = pygame.Rect(menu_rect.right + 50, menu_rect.y, 20, menu_rect.height)
+
     scroller_rect = pygame.Rect(scrollerbar_rect.x, scrollerbar_rect.y, scrollerbar_rect.width,
-                                scrollerbar_rect.height * 3 / len(level_list))
+                                scrollerbar_rect.height * (menu_rect.height / (len(level_list) * 4 * text_size)))
+
+    if scroller_rect.height > scrollerbar_rect.height:
+        scroller_rect.height = scrollerbar_rect.height
+
     text_surface = pygame.Surface((menu_rect.size[0], len(level_list) * text_size * 4))
 
     text_surfaces = [pygame.Surface((menu_rect.size[0], text_size * 4)) for i in range(len(level_list))]
@@ -45,7 +50,10 @@ def DisplayMenu(menu_data, surface):
 
 def UpdateMenu(menu_data, surface):
     menu_rect, scrollerbar_rect, scroller_rect, text_surfaces, text_rects, font = menu_data
-    percentage = (scroller_rect.top - scrollerbar_rect.top) / (scrollerbar_rect.height - scroller_rect.height)
+    if scrollerbar_rect.height - scroller_rect.height == 0:
+        percentage = 0
+    else:
+        percentage = (scroller_rect.top - scrollerbar_rect.top) / (scrollerbar_rect.height - scroller_rect.height)
     for i in range(len(text_surfaces)):
         text_rects[i].center = (surface.get_width() / 2, menu_rect.top +text_rects[i].height/2+ i * 4 * text_size - (text_rects[i].height * len(text_rects) - menu_rect.height) * percentage)
 
