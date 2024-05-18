@@ -29,6 +29,7 @@ def ReadContent(filename):
         rotation_pos = attributes[3].split(",")
         rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))
         object = GameComponent(skin, skin_name, pos[0], pos[1], size, rotation_pos, angle)
+        print(object.rotationcenter)
         list_objects.append(object)
     return list_objects
 
@@ -37,9 +38,10 @@ def SaveContent(list_game_object, filename):
     nb_objects = len(list_game_object)
     for i in range(nb_objects):
         object = list_game_object[i]
+        print(object.rotationcenter)
         level_data.write(str(object.rect.centerx) + ',' + str(list_game_object[i].rect.centery))
         level_data.write(';' + object.imgname.replace("textures/", ''))
-        level_data.write(';'+str(object.rect.width)+','+str(object.rect.height))
+        level_data.write(';'+str(object.scaled_img.get_rect().width)+','+str(object.scaled_img.get_rect().height))
         level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))
         level_data.write(';'+str(object.angle)+'\n')
     level_data.close()

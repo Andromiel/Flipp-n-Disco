@@ -4,6 +4,8 @@ import pygame.key
 
 from PlacementFunctions import *
 
+from MenuScroller import *
+
 import os
 
 from LevelLoader import *
@@ -49,6 +51,8 @@ my_levels_button_tex = pygame.image.load(my_levels_button_name)
 directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
+custom_levels_list = ["Default_Level"]
+
 class GameComponent(MapObject):
     def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):
         MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
@@ -71,7 +75,7 @@ transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
 
 game = Game(screen)
-game.GameState = LEVEL_EDITOR
+game.GameState = MENU
 
 loop = True
 clock = pygame.time.Clock()
@@ -468,7 +472,59 @@ while loop:
             pygame.display.update()
 
     if game.GameState == MY_LEVELS:
-        pass
+
+        menu_data = GenerateMenu(custom_levels_list, screen)
+        menu_rect, scrollerbar_rect, scroller_rect, text_surfaces, text_rects, font = menu_data
+        selected_level = [False, None]
+
+        while game.GameState == MY_LEVELS:
+
+            events = pygame.event.get()
+            screen.fill((200, 180, 90))
+            selected_level[0] = False
+            mouse_scroll = (0, 0)
+
+            for i in range(len(events)):
+                event = events[i]
+                if event.type == pygame.MOUSEWHEEL:
+                    mouse_scroll = (event.x, event.y)
+            for event in events:
+                if event.type == pygame.QUIT:
+                    loop = False
+                    game.GameState = QUIT
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    game.GameState = MENU
+                elif event.type == pygame.MOUSEBUTTONDOWN and mouse_scroll == (0, 0):
+                    if scrollerbar_rect.collidepoint(event.pos):
+                        scrolling = True
+                    for i in range(len(text_rects)):
+                        if not selected_level[0]:
+                            if text_rects[i].collidepoint(event.pos):
+                                selected_level[0] = True
+                                selected_level[1] = text_rects[i]
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    scrolling = False
+
+            scroller_rect.center = (scroller_rect.center[0], scroller_rect.center[1] - mouse_scroll[1] * 4)
+            if scrolling:
+                scroller_rect.center = (scroller_rect.center[0], pygame.mouse.get_pos()[1])
+            if scroller_rect.top < scrollerbar_rect.top:
+                scroller_rect.center = (scroller_rect.center[0], scrollerbar_rect.top + (scroller_rect.height / 2))
+            if scroller_rect.bottom > scrollerbar_rect.bottom:
+                scroller_rect.center = (scroller_rect.center[0], scrollerbar_rect.bottom - (scroller_rect.height / 2))
+            else:
+                if scroller_rect.top < scrollerbar_rect.top:
+                    scroller_rect.top = scrollerbar_rect.top
+                elif scroller_rect.bottom > scrollerbar_rect.bottom:
+                    scroller_rect.bottom = scrollerbar_rect.bottom
+
+            UpdateMenu(menu_data, screen)
+
+            if selected_level[1] is not None:
+                pygame.draw.rect(screen, (0, 255, 0), selected_level[1], 3)
+
+            pygame.display.update()
+
     pygame.display.update()
 
 
