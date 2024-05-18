@@ -30,11 +30,15 @@ button_name = "textures/plus sign.png"
 flipper_name = "textures/flipper.png"
 bumper_name = "textures/bumper1.png"
 wall_name = "textures/wall.png"
+save_button_name = "textures/savebutton.png"
+load_button_name = "textures/loadbutton.png"
 
 button_tex = pygame.image.load(button_name)
 flipper_tex = pygame.image.load(flipper_name)
 bumper_tex = pygame.image.load(bumper_name)
 wall_tex = pygame.image.load(wall_name)
+save_button_tex = pygame.image.load(save_button_name)
+load_button_tex = pygame.image.load(load_button_name)
 
 
 level_map_name = "textures/LEVEL MAP.png"
@@ -176,13 +180,14 @@ while loop:
 
 
         add_button = MapObject(pygame.transform.smoothscale(button_tex, (60,60)), button_name, WIDTH-60,HEIGHT-60)
+        save_button = MapObject(pygame.transform.smoothscale(save_button_tex, (120,50)), save_button_name, 80, HEIGHT-60)
+        load_button = MapObject(pygame.transform.smoothscale(load_button_tex, (120,50)), load_button_name, 230, HEIGHT-60)
         flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, 0,0)
         flipper_choose.move_at((WIDTH/2, HEIGHT/2))
         bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, 0)
         bumper_choose.move_at((WIDTH / 2 + 150, HEIGHT / 2))
         wall_choose = MapObject(pygame.transform.smoothscale(wall_tex, (60,60 * (wall_tex.get_height()/wall_tex.get_width()))), wall_name, WIDTH/2 - 150,HEIGHT/2)
         wall_choose.move_at((WIDTH / 2 - 150, HEIGHT / 2))
-
 
         transparent_background.set_alpha(128)
         transparent_background.fill((0, 0, 0))
@@ -283,6 +288,8 @@ while loop:
 
             if editing_sate == SHOW_EVERYTHING:
                 add_button.update(screen)
+                load_button.update(screen)
+                save_button.update(screen)
                 collided = False
                 shifting = False
                 if pygame.key.get_pressed()[pygame.K_LSHIFT]:
