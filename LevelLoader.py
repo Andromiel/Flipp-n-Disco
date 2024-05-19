@@ -29,7 +29,6 @@ def ReadContent(filename):
         rotation_pos = attributes[3].split(",")
         rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))
         object = GameComponent(skin, skin_name, pos[0], pos[1], size, rotation_pos, angle)
-        print(object.rotationcenter)
         list_objects.append(object)
     return list_objects
 
