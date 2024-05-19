@@ -55,7 +55,7 @@ my_levels_button_tex = pygame.image.load(my_levels_button_name)
 directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
-custom_levels_list = ["Default_Level"]
+custom_levels = ["Default_Level"]
 
 class GameComponent(MapObject):
     def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):
@@ -297,12 +297,6 @@ while loop:
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_c]:
                     copied_elements = selected_objects[:]
                     print("copied")
-                for event in events:
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_s:
-                            SaveContent(game.GameComponents, "LevelData.txt")
-                        elif event.key == pygame.K_l:
-                            game.GameComponents = ReadContent("LevelData.txt")
 
                 for event in events:
                     if event.type == pygame.KEYDOWN:
@@ -319,8 +313,14 @@ while loop:
                                     game.GameComponents[-1].rotationcenter = obj.rotationcenter
                                     print("tried")
 
-                    if event.type == pygame.MOUSEBUTTONDOWN and add_button.collidesmouse():
-                        editing_sate = CHOOSE_OBJECT
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if add_button.collidesmouse():
+                            editing_sate = CHOOSE_OBJECT
+                        elif load_button.collidesmouse():
+                            game.GameComponents = ReadContent("LevelData.txt.txt")
+                        elif save_button.collidesmouse():
+                            SaveContent(game.GameComponents, "LevelData.txt.txt")
+
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         if modify_option == REPOS_OBJECT:
                             modify_option = RESCALE_OBJECT
@@ -480,7 +480,7 @@ while loop:
 
     if game.GameState == MY_LEVELS:
 
-        menu_data = GenerateMenu(custom_levels_list, screen)
+        menu_data = GenerateMenu(custom_levels, screen)
         menu_rect, scrollerbar_rect, scroller_rect, text_surfaces, text_rects, font = menu_data
         selected_level = [False, None]
 

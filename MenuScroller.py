@@ -2,7 +2,7 @@
 import pygame
 
 scrolling = False
-list = [("Level" + str(i + 1)) for i in range(10)]
+list_levels = [("Level" + str(i + 1)) for i in range(10)]
 pygame.init()
 text_size = 20
 def GenerateMenu(level_list, surface):

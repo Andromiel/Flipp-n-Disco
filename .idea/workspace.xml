@@ -7,8 +7,9 @@
     <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/textures/loadbutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/loadbutton.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/textures/savebutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/savebutton.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LevelData.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MenuScroller.py" beforeDir="false" afterPath="$PROJECT_DIR$/MenuScroller.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

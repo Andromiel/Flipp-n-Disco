@@ -38,7 +38,6 @@ def SaveContent(list_game_object, filename):
     nb_objects = len(list_game_object)
     for i in range(nb_objects):
         object = list_game_object[i]
-        print(object.rotationcenter)
         level_data.write(str(object.rect.centerx) + ',' + str(list_game_object[i].rect.centery))
         level_data.write(';' + object.imgname.replace("textures/", ''))
         level_data.write(';'+str(object.scaled_img.get_rect().width)+','+str(object.scaled_img.get_rect().height))
