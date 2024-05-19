@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 class Ball:
-    def __init__(self, posx = 100.0, posy = 100.0, radius = 10.0, mass_per_area=1.0):
+    def __init__(self, posx = 100.0, posy = 100.0, radius = 10.0, mass_per_area=1.0, fixed_in_space = False):
         self.mass_per_area = mass_per_area
         self.area=np.pi*radius**2
         self.radius = radius
@@ -13,7 +13,7 @@ class Ball:
         self.velocity = np.array((-2.0, 0.0))
         self.acceleration = np.array((0.0, 0.0))
 
-        self.fixed_in_space=False
+        self.fixed_in_space=fixed_in_space
     def Display(self, screen):
         pygame.draw.circle(screen, (255, 0, 0), self.position, self.radius)
 

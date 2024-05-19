@@ -4,12 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="">
+    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Improved menu scroller">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ball.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ball.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/helpbutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/helpbutton.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadbutton.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/savebutton.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LevelData.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics2D.py" beforeDir="false" afterPath="$PROJECT_DIR$/Physics2D.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/textures/loadbutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/loadbutton.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/textures/savebutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/savebutton.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +45,9 @@
   &quot;associatedIndex&quot;: 5
 }</component>
   <component name="ProjectId" id="2gYYvoY9bTyM0GPqVQPPfr9l3wA" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -57,25 +66,22 @@
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco" />
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\textures" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\textures" />
-    </key>
   </component>
   <component name="RunManager">
-    <configuration name="Game" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Flipp-n-Disco" />
+    <configuration name="Game" type="PythonConfigurationType" factoryName="Python">
+      <module name="Flipper projet transverse" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.11" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="SDK_NAME" value="Python 3.10" />
+      <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Game.py" />
+      <option name="SCRIPT_NAME" value="Game.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -95,5 +101,9 @@
       <updated>1715876212274</updated>
     </task>
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Improved menu scroller" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improved menu scroller" />
   </component>
 </project>

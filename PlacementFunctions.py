@@ -6,6 +6,13 @@ REPOS_OBJECT = 1
 REPOS_ROTATION_CENTER = 2
 RESCALE_OBJECT = 3
 
+NO_TYPE = 0
+BUMPER_TYPE = 1
+FLIPPER_TYPE = 2
+WALL_TYPE = 3
+from Physics2D import PhysicsEngine, ConvexPolygon
+from Ball import Ball
+
 class MapObject:
     def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0):
         self.size = 1
@@ -29,6 +36,8 @@ class MapObject:
         self.move_at((posx, posy))
 
         self.flipped = False
+
+        self.type = NO_TYPE
     def display(self, surface):
         surface.blit(self.img, self.rect)
         if self.show_rotating_point:
@@ -74,12 +83,14 @@ class MapObject:
         self.mask = pygame.mask.from_surface(self.img)
         self.originaloffset = self.originaloffset.rotate(-angle)
 
-    def rescale(self, surface):
+    def rescale(self, surface, type = None):
         mouse_pos = pygame.mouse.get_pos()
         self.mouseoffset = (- self.rect.center[0] + mouse_pos[0], - self.rect.center[1] + mouse_pos[1])
         offset = pygame.Vector2(self.mouseoffset)
         offset = offset.rotate(self.angle)
         self.rect.size = abs(offset[0])*2, abs(offset[1])*2
+        if type == BUMPER_TYPE or type == FLIPPER_TYPE:
+            self.rect.size = abs(offset[0]), abs(offset[0] * self.original_rect.height/self.original_rect.width)
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
         if self.flipped:
@@ -87,6 +98,7 @@ class MapObject:
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
+
 
     def scale_to_size(self, size):
         self.rect.size = abs(size[0]), abs(size[1])
@@ -113,8 +125,42 @@ class MapObject:
             self.rotationcenter = mouse_pos
             self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)
         elif self.reposition == RESCALE_OBJECT:
-            self.rescale(surface)
+            self.rescale(surface, self.shadow_type)
         self.display(surface)
+class GameComponent(MapObject):
+    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None, object_type = NO_TYPE, size = (20, 20)):
+        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True, size = size)
+        self.physics_engineID = [-1, -1]#type, index
+        self.component_type = object_type
+        self.shadow_type = object_type
+    def connect_with_physics_engine(self, engine : PhysicsEngine):
+        if self.component_type == BUMPER_TYPE:
+            engine.balls.append(Ball(self.rect.center[0], self.rect.center[1], self.rect.height/2.0, 1.0, True))
+            self.physics_engineID = [0, len(engine.balls)-1]
+        elif self.component_type == FLIPPER_TYPE:
+            points = [(-0.9, 0), (0.8, 1.0/3), (0.8, -1.0/8), (-0.5, 0.6), (-0.5, -0.6)]
+            points = [(pygame.Vector2(points[i]).elementwise() * pygame.Vector2(self.scaled_img.get_size())/2.0).rotate(-self.angle) + pygame.Vector2(self.rect.center) for i in range(len(points))]
+            #points = tuple(points)
+            engine.convex_polygons.append(ConvexPolygon(*points, move_center_of_mass=(-self.rect.center[0], -self.rect.center[1]), fixed = True, fixed_rotation=True))
+            self.physics_engineID = [1, len(engine.convex_polygons)-1]
+        elif self.component_type == WALL_TYPE:
+            points = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
+            points = [(pygame.Vector2(points[i]).elementwise() * pygame.Vector2(self.scaled_img.get_size())/2.0).rotate(-self.angle) + pygame.Vector2(self.rect.center) for i in range(len(points))]
+            #points = tuple(points)
+            engine.convex_polygons.append(ConvexPolygon(*points, move_center_of_mass=(-self.rect.center[0], -self.rect.center[1]),fixed=True, fixed_rotation=True))
+            self.physics_engineID = [1, len(engine.convex_polygons)-1]
+    def adjust_to_physics(self, engine : PhysicsEngine):
+        if self.physics_engineID[0] == 0:
+            ball = engine.balls[self.physics_engineID[1]]
+            if ball.fixed != True:
+                self.rect.center = ball.position
+        if self.physics_engineID[0] == 1:
+            polygon = engine.convex_polygons[self.physics_engineID[1]]
+            if polygon.fixed != True:
+                self.rect.center = polygon.position
+            if polygon.fixed_rotation != True:
+                self.rotate_around_point(-self.angle + polygon.angle)
+
 
 '''
 Guide de la classe MapObject:

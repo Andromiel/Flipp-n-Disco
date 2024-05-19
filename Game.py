@@ -21,20 +21,22 @@ MENU = 0
 LEVEL_EDITOR = 1
 PLAY = 2
 MY_LEVELS = 3
+RUN_LEVEL = 4
 
 pygame.init()
 
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 
 button_name = "textures/plus sign.png"
+save_button_name = "textures/savebutton.png"
+load_button_name = "textures/loadbutton.png"
 flipper_name = "textures/flipper.png"
 bumper_name = "textures/bumper1.png"
 wall_name = "textures/wall.png"
-save_button_name = "textures/savebutton.png"
-load_button_name = "textures/loadbutton.png"
 help_button_name = "textures/helpbutton.png"
 
-instructions_tex = pygame.transform.scale(pygame.image.load("textures/instructions.png"), (600,750))
+instructions_tex = pygame.image.load("textures/instructions.png")
+instructions_tex = pygame.transform.smoothscale(instructions_tex, (WIDTH, WIDTH * instructions_tex.get_height()/instructions_tex.get_width()))
 button_tex = pygame.image.load(button_name)
 flipper_tex = pygame.image.load(flipper_name)
 bumper_tex = pygame.image.load(bumper_name)
@@ -59,11 +61,9 @@ directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
 custom_levels = ["Default_Level"]
-
-class GameComponent(MapObject):
-    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):
-        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
-        self.physics_engineID = [-1, -1]#type, index
+from PlacementFunctions import GameComponent
+from PlacementFunctions import PhysicsEngine
+engine = PhysicsEngine()
 class Game:
     def __init__(self, screen):
         self.GameComponents = []
@@ -82,7 +82,7 @@ transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
 
 game = Game(screen)
-game.GameState = MENU
+game.GameState = RUN_LEVEL
 
 loop = True
 clock = pygame.time.Clock()
@@ -183,9 +183,10 @@ while loop:
 
 
         add_button = MapObject(pygame.transform.smoothscale(button_tex, (60,60)), button_name, WIDTH-60,HEIGHT-60)
-        save_button = MapObject(pygame.transform.smoothscale(save_button_tex, (120,50)), save_button_name, 80, HEIGHT-60)
-        load_button = MapObject(pygame.transform.smoothscale(load_button_tex, (120,50)), load_button_name, 230, HEIGHT-60)
-        help_button = MapObject(pygame.transform.smoothscale(help_button_tex, (60,60)), help_button_name, WIDTH-60, 60)
+        save_button = MapObject(pygame.transform.smoothscale(save_button_tex, (120, 120*save_button_tex.get_height()/save_button_tex.get_width())), save_button_name, WIDTH-70, 70)
+        load_button = MapObject(pygame.transform.smoothscale(load_button_tex, (120, 120*load_button_tex.get_height()/load_button_tex.get_width())), load_button_name, WIDTH-70, 140)
+        help_button = MapObject(pygame.transform.smoothscale(help_button_tex, (40,40*help_button_tex.get_height()/help_button_tex.get_width())), help_button_name, WIDTH-70, 210)
+
         flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, 0,0)
         flipper_choose.move_at((WIDTH/2, HEIGHT/2))
         bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, 0)
@@ -193,12 +194,13 @@ while loop:
         wall_choose = MapObject(pygame.transform.smoothscale(wall_tex, (60,60 * (wall_tex.get_height()/wall_tex.get_width()))), wall_name, WIDTH/2 - 150,HEIGHT/2)
         wall_choose.move_at((WIDTH / 2 - 150, HEIGHT / 2))
 
+
         transparent_background.set_alpha(128)
         transparent_background.fill((0, 0, 0))
 
         SHOW_EVERYTHING = 0
         CHOOSE_OBJECT = 1
-        INSTRUCTIONS = 3
+        INSTRUCTIONS = 2
         editing_sate = SHOW_EVERYTHING
 
 
@@ -276,17 +278,17 @@ while loop:
                 if chose_object!=-1:
                     editing_sate = SHOW_EVERYTHING
                     if chose_object == BUMPER:
-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(bumper_tex, (bumper_tex.get_size())), bumper_name, WIDTH/2, HEIGHT/2))
+                        game.GameComponents.append(GameComponent(bumper_tex, bumper_name, WIDTH/2, HEIGHT/2, object_type = BUMPER_TYPE))
                         center = game.GameComponents[-1].rect.center
                         game.GameComponents[-1].resize(60/game.GameComponents[-1].rect.size[0])
                         game.GameComponents[-1].move_at(center)
                     if chose_object == FLIPPER:
-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(flipper_tex, (flipper_tex.get_size())), flipper_name, WIDTH/2, HEIGHT/2))
+                        game.GameComponents.append(GameComponent(flipper_tex, flipper_name, WIDTH/2, HEIGHT/2, object_type = FLIPPER_TYPE))
                         center = game.GameComponents[-1].rect.center
                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
                         game.GameComponents[-1].move_at(center)
                     if chose_object == WALL:
-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(wall_tex, (wall_tex.get_size())), wall_name, WIDTH/2, HEIGHT/2))
+                        game.GameComponents.append(GameComponent(wall_tex, wall_name, WIDTH/2, HEIGHT/2, object_type = WALL_TYPE))
                         center = game.GameComponents[-1].rect.center
                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
                         game.GameComponents[-1].move_at(center)
@@ -303,13 +305,24 @@ while loop:
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_c]:
                     copied_elements = selected_objects[:]
                     print("copied")
+                for event in events:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if add_button.collidesmouse():
+                            editing_sate = CHOOSE_OBJECT
+                        if save_button.collidesmouse():
+                            SaveContent(game.GameComponents, "LevelData.txt")
+                        if load_button.collidesmouse():
+                            game.GameComponents = ReadContent("LevelData.txt")
+                            selected_objects.clear()
+                            selected_object = None, None
+                        if help_button.collidesmouse():
+                            editing_sate = INSTRUCTIONS
 
                 for event in events:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_v:
                             if pygame.key.get_pressed()[pygame.K_LCTRL]:
                                 for i in range(len(copied_elements)):
-                                    print("pasted")
                                     obj = copied_elements[i][0]
                                     game.GameComponents.append(GameComponent(obj.original_img, obj.imgname, obj.rect.center[0], obj.rect.center[1]))
                                     game.GameComponents[-1].rect.size = obj.original_rect.size
@@ -317,17 +330,7 @@ while loop:
                                     game.GameComponents[-1].rotate_around_point(obj.angle)
                                     game.GameComponents[-1].originaloffset = obj.originaloffset
                                     game.GameComponents[-1].rotationcenter = obj.rotationcenter
-                                    print("tried")
-
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if add_button.collidesmouse():
-                            editing_sate = CHOOSE_OBJECT
-                        elif load_button.collidesmouse():
-                            game.GameComponents = ReadContent("Default_Level.txt")
-                        elif save_button.collidesmouse():
-                            SaveContent(game.GameComponents, "LevelData.txt")
-                        elif help_button.collidesmouse():
-                            editing_sate = INSTRUCTIONS
+                                    game.GameComponents[-1].component_type = obj.component_type
 
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         if modify_option == REPOS_OBJECT:
@@ -406,10 +409,11 @@ while loop:
                                     selected_object = None, None
 
             if editing_sate == INSTRUCTIONS:
+                screen.fill((112, 48, 160))
                 screen.blit(instructions_tex, (0,0))
                 help_button.update(screen)
                 for event in events:
-                    if event.type == pygame.MOUSEBUTTONUP and help_button.collidesmouse():
+                    if event.type == pygame.MOUSEBUTTONUP:
                         editing_sate = SHOW_EVERYTHING
 
             for event in events:
@@ -460,7 +464,7 @@ while loop:
             pygame.display.update()
         while game.GameState == PLAY:
             events = pygame.event.get()
-
+            clicked = False
             for event in events:
                 if event.type == pygame.QUIT:
                     loop = False
@@ -468,12 +472,19 @@ while loop:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         game.GameState = MENU
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == pygame.K_LEFT:
+                        clicked = True
+            pressed = pygame.key.get_pressed()
 
             for i in range(n_levels):
                 if levels_numbers[i].collidesmouse():
                     if(levels_numbers[i].rect.size[0]/levels_numbers[i].original_rect.size[0] < 0.8):
                         levels_numbers[i].resize(1.03)
                         shadows[i].resize(1.05)
+
+                    game.GameState = RUN_LEVEL
+                    print("clicked")
                 else:
                     if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] > 0.7):
                         levels_numbers[i].resize(0.97)
@@ -493,6 +504,31 @@ while loop:
             for i in range(n_levels):
                 levels_numbers[i].update(screen)
 
+            pygame.display.update()
+    if game.GameState == RUN_LEVEL:
+        game.GameComponents = ReadContent("LevelData.txt")
+        engine.clear()
+        for component in game.GameComponents:
+            component.connect_with_physics_engine(engine)
+        while game.GameState == RUN_LEVEL:
+            clock.tick(60)
+            screen.fill((0, 120, 35))
+            events = pygame.event.get()
+
+            for event in events:
+                if event.type == pygame.QUIT:
+                    loop = False
+                    game.GameState = QUIT
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        game.GameState = MENU
+            engine.Update(screen, 1.0/60.0)
+            game.ShowComponents()
+            for polygon in engine.convex_polygons:
+                for point in polygon.points:
+                    pygame.draw.circle(screen, (255, 0, 0), point, 3)
+            for ball in engine.balls:
+                pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
             pygame.display.update()
 
     if game.GameState == MY_LEVELS:

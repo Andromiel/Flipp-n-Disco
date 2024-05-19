@@ -1,9 +1,6 @@
 from PlacementFunctions import *
 
-class GameComponent(MapObject):
-    def __init__(self, img = None, imgname = None, posx=0, posy=0, size=(20,20), rotationcenter=None, angle=None):
-        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
-        self.physics_engineID = [-1, -1]#type, index
+from PlacementFunctions import GameComponent
 
 def ReadContent(filename):
     level_data = open(filename, "r")
@@ -24,11 +21,16 @@ def ReadContent(filename):
         angle = int(attributes[4])
         skin_name = str(attributes[1])[0:]
         skin = pygame.image.load("textures/" + skin_name)
-        skin = pygame.transform.smoothscale(skin, (size[0], size[1]))
-        skin = pygame.transform.rotate(skin, angle)
+        #skin = pygame.transform.rotate(skin, angle)
         rotation_pos = attributes[3].split(",")
         rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))
-        object = GameComponent(skin, skin_name, pos[0], pos[1], size, rotation_pos, angle)
+        component_type = int(attributes[5])
+        object = GameComponent(skin, skin_name, pos[0], pos[1], rotation_pos, 0, component_type)
+        center = object.rect.center
+        object.resize(60 / object.rect.size[0])
+        object.move_at(center)
+        object.scale_to_size(size)
+        object.rotate_around_point(angle)
         list_objects.append(object)
     return list_objects
 
@@ -39,9 +41,11 @@ def SaveContent(list_game_object, filename):
         object = list_game_object[i]
         level_data.write(str(object.rect.centerx) + ',' + str(list_game_object[i].rect.centery))
         level_data.write(';' + object.imgname.replace("textures/", ''))
-        level_data.write(';'+str(object.scaled_img.get_rect().width)+','+str(object.scaled_img.get_rect().height))
+        level_data.write(';'+str(object.scaled_img.get_width())+','+str(object.scaled_img.get_height()))
         level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))
-        level_data.write(';'+str(object.angle)+'\n')
+        level_data.write(';'+str(object.angle))
+        level_data.write(';' + str(object.component_type))
+        level_data.write('\n')
     level_data.close()
 
 def DefaultContent(filename):

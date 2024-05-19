@@ -49,7 +49,7 @@ def SegmentIntersection(A, B, C, D):
         return False, np.array((0, 0))
 
 class ConvexPolygon:
-    def __init__(self, *points, fixed = False, fixed_rotation = False, move_center_of_mass = (0, 0)):
+    def __init__(self, *points, fixed = False, fixed_rotation = False, move_center_of_mass = (0, 0), mass_per_area = 1.0):
         self.fixed_in_space = fixed
         self.fixed_rotation = fixed_rotation
         self.points = list(points)
@@ -73,7 +73,7 @@ class ConvexPolygon:
 
         self.true_position = self.center_of_mass
 
-        self.mass_per_area = 1
+        self.mass_per_area = mass_per_area
         self.rotational_inertia = 0
 
         self.SetRotationalInertia()
@@ -399,14 +399,16 @@ class PhysicsEngine:
                                                                                normal) * j / polygon.rotational_inertia
 
 
-
+    def clear(self):
+        self.convex_polygons.clear()
+        self.balls.clear()
 
 
     def Update(self, screen, delta_time):
         for i in range(len(self.convex_polygons)):
-            dif = self.convex_polygons[i].center_of_mass
-            rot_dif = self.convex_polygons[i].rotation
             for j in range(i+1, len(self.convex_polygons)):
+                if i == j:
+                    continue
                 if np.linalg.norm(self.convex_polygons[i].center_of_mass - self.convex_polygons[j].center_of_mass)<=(self.convex_polygons[i].simple_radius + self.convex_polygons[j].simple_radius):
                     self.FindAndSolvePolygonsCollision(self.convex_polygons[i], self.convex_polygons[j])
             for j in range(len(self.balls)):
@@ -423,9 +425,10 @@ class PhysicsEngine:
                 self.convex_polygons[i].rotational_velocity *= (0.999)
 
 
-            self.convex_polygons[i].DisplayPoints(screen)
+            #self.convex_polygons[i].DisplayPoints(screen)
         for i in range(len(self.balls)):
-            self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time
-            self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time
-            self.balls[i].velocity *= (0.999)
-            self.balls[i].Display(screen)
+            if not self.balls[i].fixed_in_space:
+                self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time
+                self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time
+                self.balls[i].velocity *= (0.999)
+            #self.balls[i].Display(screen)
