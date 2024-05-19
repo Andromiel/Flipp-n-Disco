@@ -1,0 +1,1139 @@
+Index: LevelLoader.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from PlacementFunctions import *\r\n\r\nclass GameComponent(MapObject):\r\n    def __init__(self, img = None, imgname = None, posx=0, posy=0, size=(20,20), rotationcenter=None, angle=None):\r\n        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)\r\n        self.physics_engineID = [-1, -1]#type, index\r\n\r\ndef ReadContent(filename):\r\n    level_data = open(filename, \"r\")\r\n    data_list = level_data.readlines()\r\n    nb_objects = len(data_list)\r\n    level_data.close()\r\n    list_objects = []\r\n    for i in range(nb_objects):\r\n\r\n        if data_list[i][-1] == '\\n':\r\n            data_list[i] = data_list[i][:-1]\r\n\r\n        attributes = str(data_list[i]).split(\";\")\r\n        pos = attributes[0].split(\",\")\r\n        pos = (int(pos[0]), int(pos[1]))\r\n        size = attributes[2].split(\",\")\r\n        size = (int(size[0]), int(size[1]))\r\n        angle = int(attributes[4])\r\n        skin_name = str(attributes[1])[0:]\r\n        skin = pygame.image.load(\"textures/\" + skin_name)\r\n        skin = pygame.transform.smoothscale(skin, (size[0], size[1]))\r\n        skin = pygame.transform.rotate(skin, angle)\r\n        rotation_pos = attributes[3].split(\",\")\r\n        rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))\r\n        object = GameComponent(skin, skin_name, pos[0], pos[1], size, rotation_pos, angle)\r\n        list_objects.append(object)\r\n    return list_objects\r\n\r\ndef SaveContent(list_game_object, filename):\r\n    level_data = open(filename, \"w\")\r\n    nb_objects = len(list_game_object)\r\n    for i in range(nb_objects):\r\n        object = list_game_object[i]\r\n        level_data.write(str(object.rect.centerx) + ',' + str(list_game_object[i].rect.centery))\r\n        level_data.write(';' + object.imgname.replace(\"textures/\", ''))\r\n        level_data.write(';'+str(object.rect.width)+','+str(object.rect.height))\r\n        level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))\r\n        level_data.write(';'+str(object.angle)+'\\n')\r\n    level_data.close()\r\n\r\ndef DefaultContent(filename):\r\n    level_data = open(filename, \"w\")\r\n    for i in range(5):\r\n        level_data.write(str(i * 30) + ',' + str(i * 30))\r\n        level_data.write(';ball.png')\r\n        level_data.write(';50,50')\r\n        level_data.write(';'+str(i * (30+25)) + ',' + str(i * (30+25)))\r\n        level_data.write(';0\\n')\r\n\r\n    level_data.close()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/LevelLoader.py b/LevelLoader.py
+--- a/LevelLoader.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/LevelLoader.py	(date 1716070068324)
+@@ -1,9 +1,6 @@
+ from PlacementFunctions import *
+ 
+-class GameComponent(MapObject):
+-    def __init__(self, img = None, imgname = None, posx=0, posy=0, size=(20,20), rotationcenter=None, angle=None):
+-        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
+-        self.physics_engineID = [-1, -1]#type, index
++from PlacementFunctions import GameComponent
+ 
+ def ReadContent(filename):
+     level_data = open(filename, "r")
+@@ -24,11 +21,16 @@
+         angle = int(attributes[4])
+         skin_name = str(attributes[1])[0:]
+         skin = pygame.image.load("textures/" + skin_name)
+-        skin = pygame.transform.smoothscale(skin, (size[0], size[1]))
+-        skin = pygame.transform.rotate(skin, angle)
++        #skin = pygame.transform.rotate(skin, angle)
+         rotation_pos = attributes[3].split(",")
+         rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))
+-        object = GameComponent(skin, skin_name, pos[0], pos[1], size, rotation_pos, angle)
++        component_type = int(attributes[5])
++        object = GameComponent(skin, skin_name, pos[0], pos[1], rotation_pos, 0, component_type)
++        center = object.rect.center
++        object.resize(60 / object.rect.size[0])
++        object.move_at(center)
++        object.scale_to_size(size)
++        object.rotate_around_point(angle)
+         list_objects.append(object)
+     return list_objects
+ 
+@@ -39,9 +41,11 @@
+         object = list_game_object[i]
+         level_data.write(str(object.rect.centerx) + ',' + str(list_game_object[i].rect.centery))
+         level_data.write(';' + object.imgname.replace("textures/", ''))
+-        level_data.write(';'+str(object.rect.width)+','+str(object.rect.height))
++        level_data.write(';'+str(object.scaled_img.get_width())+','+str(object.scaled_img.get_height()))
+         level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))
+-        level_data.write(';'+str(object.angle)+'\n')
++        level_data.write(';'+str(object.angle))
++        level_data.write(';' + str(object.component_type))
++        level_data.write('\n')
+     level_data.close()
+ 
+ def DefaultContent(filename):
+Index: PlacementFunctions.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pygame\r\nimport time\r\n\r\nDONT_MOVE = 0\r\nREPOS_OBJECT = 1\r\nREPOS_ROTATION_CENTER = 2\r\nRESCALE_OBJECT = 3\r\n\r\nclass MapObject:\r\n    def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0):\r\n        self.size = 1\r\n        self.imgname = imgname\r\n        self.img = img\r\n        self.original_img = self.img\r\n        self.scaled_img = self.img\r\n        self.reposition = 0\r\n        self.rect = self.img.get_rect()\r\n        self.rect.center = (posx, posy)\r\n        self.original_rect = self.img.get_rect()\r\n        self.original_size = size\r\n        self.rect.x, self.rect.y = posx, posy\r\n        self.originaloffset = pygame.Vector2(0, 0)\r\n        self.mask = pygame.mask.from_surface(self.img)\r\n        self.rotationcenter = self.rect.center\r\n        self.mouseoffset = (0,0)\r\n        self.angle = angle\r\n        self.rotating = False\r\n        self.show_rotating_point = show_rotating_point\r\n        self.move_at((posx, posy))\r\n\r\n        self.flipped = False\r\n    def display(self, surface):\r\n        surface.blit(self.img, self.rect)\r\n        if self.show_rotating_point:\r\n            pygame.draw.circle(surface, (255,0,0), self.rotationcenter, 3)\r\n            pygame.draw.line(surface, (0, 255, 255), self.rect.center, self.rotationcenter)\r\n    def move_at(self, pos):\r\n        pos = pygame.Vector2(pos)\r\n        offset = pygame.Vector2(self.rect.center)\r\n        offset = self.rotationcenter-offset\r\n\r\n        self.rect.center = pygame.Vector2(pos)\r\n        self.rotationcenter = pos + offset\r\n\r\n    def collidesmouse(self):\r\n        mouse_pos = pygame.mouse.get_pos()\r\n        pos_distance = (mouse_pos[0]-self.rect.x, mouse_pos[1]-self.rect.y)\r\n        self.mouseoffset = (self.rect.center[0] - mouse_pos[0], self.rect.center[1] - mouse_pos[1])\r\n        return self.rect.collidepoint(mouse_pos) and self.mask.get_at(pos_distance)\r\n\r\n    def resize(self, size : float):\r\n        self.size*=size\r\n        center = self.rect.center\r\n        self.rect.size=(self.rect.size[0]*size, self.rect.size[0]*size * self.original_rect.size[1]/self.original_rect.size[0])\r\n        self.rect.center = center\r\n        self.rotationcenter = self.rect.center + self.originaloffset*size\r\n        self.img = pygame.transform.smoothscale(self.original_img, self.rect.size)\r\n        if self.flipped:\r\n            self.img = pygame.transform.flip(self.img, False, True)\r\n        self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)\r\n        self.mask = pygame.mask.from_surface(self.img)\r\n\r\n    def rotate_around_point(self, angle):\r\n        #print(self.originaloffset)\r\n        self.angle+=angle\r\n        rotated_img = pygame.transform.rotate(self.scaled_img, self.angle)\r\n        pivot_vec = pygame.Vector2(self.rotationcenter)\r\n\r\n        new_center = pivot_vec - self.originaloffset.rotate(-angle)\r\n        self.rect = rotated_img.get_rect(center=new_center)\r\n        self.img = rotated_img\r\n        if self.flipped:\r\n            self.img = pygame.transform.flip(self.img, False, True)\r\n        self.mask = pygame.mask.from_surface(self.img)\r\n        self.originaloffset = self.originaloffset.rotate(-angle)\r\n\r\n    def rescale(self, surface):\r\n        mouse_pos = pygame.mouse.get_pos()\r\n        self.mouseoffset = (- self.rect.center[0] + mouse_pos[0], - self.rect.center[1] + mouse_pos[1])\r\n        offset = pygame.Vector2(self.mouseoffset)\r\n        offset = offset.rotate(self.angle)\r\n        self.rect.size = abs(offset[0])*2, abs(offset[1])*2\r\n        self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)\r\n        self.img = pygame.transform.rotate(self.scaled_img, self.angle)\r\n        if self.flipped:\r\n            self.img = pygame.transform.flip(self.img, False, True)\r\n        self.mask = pygame.mask.from_surface(self.img)\r\n\r\n        self.rotate_around_point(0)\r\n\r\n    def scale_to_size(self, size):\r\n        self.rect.size = abs(size[0]), abs(size[1])\r\n        self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)\r\n        self.img = pygame.transform.rotate(self.scaled_img, self.angle)\r\n        if self.flipped:\r\n            self.img = pygame.transform.flip(self.img, False, True)\r\n        self.mask = pygame.mask.from_surface(self.img)\r\n\r\n        self.rotate_around_point(0)\r\n    def reposition_option(self, option):\r\n        self.reposition = option\r\n        if option == REPOS_OBJECT:\r\n            self.mouseoffset = (pygame.Vector2(self.rect.center) - pygame.Vector2(pygame.mouse.get_pos()))\r\n    def flip_x_axis(self):\r\n        self.flipped = True\r\n        self.img = pygame.transform.flip(self.img, False, True)\r\n    def update(self, surface):\r\n        mouse_pos = pygame.mouse.get_pos()\r\n\r\n        if self.reposition == REPOS_OBJECT:\r\n            self.move_at(mouse_pos+pygame.Vector2(self.mouseoffset))\r\n        elif self.reposition == REPOS_ROTATION_CENTER:\r\n            self.rotationcenter = mouse_pos\r\n            self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)\r\n        elif self.reposition == RESCALE_OBJECT:\r\n            self.rescale(surface)\r\n        self.display(surface)\r\n\r\n'''\r\nGuide de la classe MapObject:\r\n- Reposition = 1 : Change la position de l'objet par rapport à la souris\r\n- Reposition = 2 : change la position du centre de rotation de l'objet par rapport à la souris\r\n'''
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/PlacementFunctions.py b/PlacementFunctions.py
+--- a/PlacementFunctions.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/PlacementFunctions.py	(date 1716071396950)
+@@ -6,6 +6,13 @@
+ REPOS_ROTATION_CENTER = 2
+ RESCALE_OBJECT = 3
+ 
++NO_TYPE = 0
++BUMPER_TYPE = 1
++FLIPPER_TYPE = 2
++WALL_TYPE = 3
++from Physics2D import PhysicsEngine, ConvexPolygon
++from Ball import Ball
++
+ class MapObject:
+     def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0):
+         self.size = 1
+@@ -29,6 +36,8 @@
+         self.move_at((posx, posy))
+ 
+         self.flipped = False
++
++        self.type = NO_TYPE
+     def display(self, surface):
+         surface.blit(self.img, self.rect)
+         if self.show_rotating_point:
+@@ -74,12 +83,14 @@
+         self.mask = pygame.mask.from_surface(self.img)
+         self.originaloffset = self.originaloffset.rotate(-angle)
+ 
+-    def rescale(self, surface):
++    def rescale(self, surface, type = None):
+         mouse_pos = pygame.mouse.get_pos()
+         self.mouseoffset = (- self.rect.center[0] + mouse_pos[0], - self.rect.center[1] + mouse_pos[1])
+         offset = pygame.Vector2(self.mouseoffset)
+         offset = offset.rotate(self.angle)
+         self.rect.size = abs(offset[0])*2, abs(offset[1])*2
++        if type == BUMPER_TYPE or type == FLIPPER_TYPE:
++            self.rect.size = abs(offset[0]), abs(offset[0] * self.original_rect.height/self.original_rect.width)
+         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
+         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
+         if self.flipped:
+@@ -88,6 +99,7 @@
+ 
+         self.rotate_around_point(0)
+ 
++
+     def scale_to_size(self, size):
+         self.rect.size = abs(size[0]), abs(size[1])
+         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
+@@ -113,8 +125,42 @@
+             self.rotationcenter = mouse_pos
+             self.originaloffset = pygame.Vector2(self.rotationcenter)-pygame.Vector2(self.rect.center)
+         elif self.reposition == RESCALE_OBJECT:
+-            self.rescale(surface)
++            self.rescale(surface, self.shadow_type)
+         self.display(surface)
++class GameComponent(MapObject):
++    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None, object_type = NO_TYPE, size = (20, 20)):
++        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True, size = size)
++        self.physics_engineID = [-1, -1]#type, index
++        self.component_type = object_type
++        self.shadow_type = object_type
++    def connect_with_physics_engine(self, engine : PhysicsEngine):
++        if self.component_type == BUMPER_TYPE:
++            engine.balls.append(Ball(self.rect.center[0], self.rect.center[1], self.rect.height/2.0, 1.0, True))
++            self.physics_engineID = [0, len(engine.balls)-1]
++        elif self.component_type == FLIPPER_TYPE:
++            points = [(-0.9, 0), (0.8, 1.0/3), (0.8, -1.0/8), (-0.5, 0.6), (-0.5, -0.6)]
++            points = [(pygame.Vector2(points[i]).elementwise() * pygame.Vector2(self.scaled_img.get_size())/2.0).rotate(-self.angle) + pygame.Vector2(self.rect.center) for i in range(len(points))]
++            #points = tuple(points)
++            engine.convex_polygons.append(ConvexPolygon(*points, move_center_of_mass=(-self.rect.center[0], -self.rect.center[1]), fixed = True, fixed_rotation=True))
++            self.physics_engineID = [1, len(engine.convex_polygons)-1]
++        elif self.component_type == WALL_TYPE:
++            points = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
++            points = [(pygame.Vector2(points[i]).elementwise() * pygame.Vector2(self.scaled_img.get_size())/2.0).rotate(-self.angle) + pygame.Vector2(self.rect.center) for i in range(len(points))]
++            #points = tuple(points)
++            engine.convex_polygons.append(ConvexPolygon(*points, move_center_of_mass=(-self.rect.center[0], -self.rect.center[1]),fixed=True, fixed_rotation=True))
++            self.physics_engineID = [1, len(engine.convex_polygons)-1]
++    def adjust_to_physics(self, engine : PhysicsEngine):
++        if self.physics_engineID[0] == 0:
++            ball = engine.balls[self.physics_engineID[1]]
++            if ball.fixed != True:
++                self.rect.center = ball.position
++        if self.physics_engineID[0] == 1:
++            polygon = engine.convex_polygons[self.physics_engineID[1]]
++            if polygon.fixed != True:
++                self.rect.center = polygon.position
++            if polygon.fixed_rotation != True:
++                self.rotate_around_point(-self.angle + polygon.angle)
++
+ 
+ '''
+ Guide de la classe MapObject:
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pygame.draw\r\n\r\nfrom Ball import Ball, BallList\r\n\r\nfrom Physics2D import SignedAngle, ConvexPolygon, LineIntersection, SegmentIntersection, PhysicsEngine\r\n\r\nimport pygame\r\nimport numpy as np\r\nimport random as rd\r\nimport time\r\n\r\n\r\n\r\n# Define some colors\r\nBLACK = (0, 0, 0)\r\nWHITE = (255, 255, 255)\r\nGREEN = (0, 255, 0)\r\nRED = (255, 0, 0)\r\n\r\nprint(SignedAngle((-1.0, -1.0)))\r\n\r\npygame.init()\r\n\r\n# Set the width and height of the screen [width, height]\r\n\r\nWIDTH = 800\r\nHEIGHT = 700\r\nsize = (WIDTH, HEIGHT)\r\nscreen = pygame.display.set_mode(size)\r\n\r\npygame.display.set_caption(\"My Game\")\r\n\r\n# Loop until the user clicks the close button.\r\ndone = False\r\n\r\n# Used to manage how fast the screen updates\r\nclock = pygame.time.Clock()\r\n\r\nball = Ball()\r\n\r\ng = 9.81\r\n\r\nball_list = BallList(WIDTH, HEIGHT)\r\n\r\npolygon = ConvexPolygon(*[(rd.randint(100, 400), rd.randint(100, 400)) for i in range(20)])\r\npolygon.Translate(np.array((400, 400)))\r\n\r\nprint(SegmentIntersection(np.array((1, 1)), np.array((3, 2)), np.array((2.5, 0)), np.array((2.1, 1.4))))\r\n\r\nengine = PhysicsEngine()\r\n#engine.convex_polygons.append(ConvexPolygon(*[np.array((np.cos(i*np.pi/8), np.sin(i*np.pi/8)))*40 for i in range(16)]))\r\n#engine.convex_polygons[-1].Translate((200, 200))\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))\r\nengine.convex_polygons[-1].Translate((-WIDTH/2, HEIGHT/2))\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))\r\nengine.convex_polygons[-1].Translate((WIDTH/2, -HEIGHT/2))\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))\r\nengine.convex_polygons[-1].Translate((WIDTH/2, HEIGHT*1.5))\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))\r\nengine.convex_polygons[-1].Translate((WIDTH*1.5, HEIGHT/2))\r\n\r\nfor i in range(1):\r\n    #engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 100), (100, 0), (0, 100)))\r\n    engine.balls.append(Ball(i*200+250, 300, 55, 1))\r\n\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))\r\nengine.convex_polygons[-2].Translate((WIDTH/2.0 + 150, 600))\r\nengine.convex_polygons[-1].Translate((WIDTH/2.0 - 150, 600))\r\nengine.convex_polygons[-1].Rotate(np.pi)\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (100, 0),(100, 10)))#dummy\r\nengine.convex_polygons[-1].Translate((WIDTH/2.0 + 150, 300))\r\n\r\n\r\nengine.convex_polygons.append(ConvexPolygon((0, 0), (1, 0),(0, 1)))#dummy\r\n\r\n\r\n\r\n#engine.convex_polygons[-1].Rotate(-0.1)\r\n\r\nnow_time = time.time()\r\n# -------- Main Program Loop -----------\r\nwhile not done:\r\n    # --- Main event loop\r\n    events = pygame.event.get()\r\n    for event in events:\r\n        if event.type == pygame.QUIT:\r\n            done = True\r\n    # --- Game logic should go here\r\n\r\n    # --- Screen-clearing code goes here\r\n\r\n    # Here, we clear the screen to white. Don't put other drawing commands\r\n    # above this, or they will be erased with this command.\r\n\r\n    # If you want a background image, replace this clear with blit'ing the\r\n    # background image.\r\n    screen.fill(BLACK)\r\n    #polygon.DisplayPoints(screen)\r\n    keys = pygame.key.get_pressed()\r\n    if keys[pygame.K_SPACE]:\r\n        if(engine.convex_polygons[5].rotation>np.pi/2.0):\r\n            engine.convex_polygons[5].rotational_velocity = -6.0\r\n        else:\r\n            engine.convex_polygons[5].rotational_velocity = 0\r\n\r\n        if (engine.convex_polygons[4].rotation < np.pi / 2.0):\r\n            engine.convex_polygons[4].rotational_velocity = 6.0\r\n        else:\r\n            engine.convex_polygons[4].rotational_velocity = 0\r\n    else:\r\n        if engine.convex_polygons[5].rotation<np.pi:\r\n            engine.convex_polygons[5].rotational_velocity = 6.0\r\n        else:\r\n            engine.convex_polygons[5].rotational_velocity = 0\r\n        if engine.convex_polygons[4].rotation>0:\r\n            engine.convex_polygons[4].rotational_velocity = -6.0\r\n        else:\r\n            engine.convex_polygons[4].rotational_velocity = 0\r\n\r\n    if pygame.mouse.get_pressed()[0]:\r\n        engine.convex_polygons.insert(-1, ConvexPolygon((0, 0), (40, 0), (40, 40), (0, 40), fixed=True))\r\n        engine.convex_polygons[-2].Translate((pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))\r\n        time.sleep(0.2)\r\n\r\n    delta_time = time.time()-now_time\r\n    now_time += delta_time\r\n    engine.Update(screen, delta_time)\r\n\r\n\r\n\r\n    # --- Drawing code should go here\r\n\r\n    # --- Go ahead and update the screen with what we've drawn.\r\n    pygame.display.flip()\r\n\r\n    # --- Limit to 60 frames per second\r\n    clock.tick(60)\r\n\r\n# Close the window and quit.\r\npygame.quit()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/main.py	(date 1716070612019)
+@@ -9,133 +9,134 @@
+ import random as rd
+ import time
+ 
++if __name__ == "__main__":
+ 
+ 
+-# Define some colors
+-BLACK = (0, 0, 0)
+-WHITE = (255, 255, 255)
+-GREEN = (0, 255, 0)
+-RED = (255, 0, 0)
++    # Define some colors
++    BLACK = (0, 0, 0)
++    WHITE = (255, 255, 255)
++    GREEN = (0, 255, 0)
++    RED = (255, 0, 0)
+ 
+-print(SignedAngle((-1.0, -1.0)))
++    print(SignedAngle((-1.0, -1.0)))
+ 
+-pygame.init()
++    pygame.init()
+ 
+-# Set the width and height of the screen [width, height]
++    # Set the width and height of the screen [width, height]
+ 
+-WIDTH = 800
+-HEIGHT = 700
+-size = (WIDTH, HEIGHT)
+-screen = pygame.display.set_mode(size)
++    WIDTH = 800
++    HEIGHT = 700
++    size = (WIDTH, HEIGHT)
++    screen = pygame.display.set_mode(size)
+ 
+-pygame.display.set_caption("My Game")
++    pygame.display.set_caption("My Game")
+ 
+-# Loop until the user clicks the close button.
+-done = False
++    # Loop until the user clicks the close button.
++    done = False
+ 
+-# Used to manage how fast the screen updates
+-clock = pygame.time.Clock()
++    # Used to manage how fast the screen updates
++    clock = pygame.time.Clock()
+ 
+-ball = Ball()
++    ball = Ball()
+ 
+-g = 9.81
++    g = 9.81
+ 
+-ball_list = BallList(WIDTH, HEIGHT)
++    ball_list = BallList(WIDTH, HEIGHT)
+ 
+-polygon = ConvexPolygon(*[(rd.randint(100, 400), rd.randint(100, 400)) for i in range(20)])
+-polygon.Translate(np.array((400, 400)))
++    polygon = ConvexPolygon(*[(rd.randint(100, 400), rd.randint(100, 400)) for i in range(20)])
++    polygon.Translate(np.array((400, 400)))
+ 
+-print(SegmentIntersection(np.array((1, 1)), np.array((3, 2)), np.array((2.5, 0)), np.array((2.1, 1.4))))
++    print(SegmentIntersection(np.array((1, 1)), np.array((3, 2)), np.array((2.5, 0)), np.array((2.1, 1.4))))
+ 
+-engine = PhysicsEngine()
+-#engine.convex_polygons.append(ConvexPolygon(*[np.array((np.cos(i*np.pi/8), np.sin(i*np.pi/8)))*40 for i in range(16)]))
+-#engine.convex_polygons[-1].Translate((200, 200))
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
+-engine.convex_polygons[-1].Translate((-WIDTH/2, HEIGHT/2))
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
+-engine.convex_polygons[-1].Translate((WIDTH/2, -HEIGHT/2))
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
+-engine.convex_polygons[-1].Translate((WIDTH/2, HEIGHT*1.5))
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
+-engine.convex_polygons[-1].Translate((WIDTH*1.5, HEIGHT/2))
++    engine = PhysicsEngine()
++    #engine.convex_polygons.append(ConvexPolygon(*[np.array((np.cos(i*np.pi/8), np.sin(i*np.pi/8)))*40 for i in range(16)]))
++    #engine.convex_polygons[-1].Translate((200, 200))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
++    engine.convex_polygons[-1].Translate((-WIDTH/2, HEIGHT/2))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
++    engine.convex_polygons[-1].Translate((WIDTH/2, -HEIGHT/2))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
++    engine.convex_polygons[-1].Translate((WIDTH/2, HEIGHT*1.5))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT), fixed=True, fixed_rotation=True))
++    engine.convex_polygons[-1].Translate((WIDTH*1.5, HEIGHT/2))
+ 
+-for i in range(1):
+-    #engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 100), (100, 0), (0, 100)))
+-    engine.balls.append(Ball(i*200+250, 300, 55, 1))
++    for i in range(1):
++        #engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 100), (100, 0), (0, 100)))
++        engine.balls.append(Ball(i*200+250, 300, 55, 1))
+ 
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
+-engine.convex_polygons[-2].Translate((WIDTH/2.0 + 150, 600))
+-engine.convex_polygons[-1].Translate((WIDTH/2.0 - 150, 600))
+-engine.convex_polygons[-1].Rotate(np.pi)
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 0),(100, 10)))#dummy
+-engine.convex_polygons[-1].Translate((WIDTH/2.0 + 150, 300))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (130, 10), (130, -10), fixed=True, move_center_of_mass=(20, 0)))
++    engine.convex_polygons[-2].Translate((WIDTH/2.0 + 150, 600))
++    engine.convex_polygons[-1].Translate((WIDTH/2.0 - 150, 600))
++    engine.convex_polygons[-1].Rotate(np.pi)
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (100, 0),(100, 10)))#dummy
++    engine.convex_polygons[-1].Translate((WIDTH/2.0 + 150, 300))
+ 
+ 
+-engine.convex_polygons.append(ConvexPolygon((0, 0), (1, 0),(0, 1)))#dummy
++    engine.convex_polygons.append(ConvexPolygon((0, 0), (1, 0),(0, 1)))#dummy
+ 
+ 
+ 
+-#engine.convex_polygons[-1].Rotate(-0.1)
++    #engine.convex_polygons[-1].Rotate(-0.1)
+ 
+-now_time = time.time()
+-# -------- Main Program Loop -----------
+-while not done:
+-    # --- Main event loop
+-    events = pygame.event.get()
+-    for event in events:
+-        if event.type == pygame.QUIT:
+-            done = True
+-    # --- Game logic should go here
++    now_time = time.time()
++    # -------- Main Program Loop -----------
++    while not done:
++        # --- Main event loop
++        events = pygame.event.get()
++        for event in events:
++            if event.type == pygame.QUIT:
++                done = True
++        # --- Game logic should go here
+ 
+-    # --- Screen-clearing code goes here
++        # --- Screen-clearing code goes here
+ 
+-    # Here, we clear the screen to white. Don't put other drawing commands
+-    # above this, or they will be erased with this command.
++        # Here, we clear the screen to white. Don't put other drawing commands
++        # above this, or they will be erased with this command.
+ 
+-    # If you want a background image, replace this clear with blit'ing the
+-    # background image.
+-    screen.fill(BLACK)
+-    #polygon.DisplayPoints(screen)
+-    keys = pygame.key.get_pressed()
+-    if keys[pygame.K_SPACE]:
+-        if(engine.convex_polygons[5].rotation>np.pi/2.0):
+-            engine.convex_polygons[5].rotational_velocity = -6.0
+-        else:
+-            engine.convex_polygons[5].rotational_velocity = 0
++        # If you want a background image, replace this clear with blit'ing the
++        # background image.
++        screen.fill(BLACK)
++        #polygon.DisplayPoints(screen)
++        keys = pygame.key.get_pressed()
++        if keys[pygame.K_SPACE]:
++            if(engine.convex_polygons[5].rotation>np.pi/2.0):
++                engine.convex_polygons[5].rotational_velocity = -6.0
++            else:
++                engine.convex_polygons[5].rotational_velocity = 0
+ 
+-        if (engine.convex_polygons[4].rotation < np.pi / 2.0):
+-            engine.convex_polygons[4].rotational_velocity = 6.0
+-        else:
+-            engine.convex_polygons[4].rotational_velocity = 0
+-    else:
+-        if engine.convex_polygons[5].rotation<np.pi:
+-            engine.convex_polygons[5].rotational_velocity = 6.0
+-        else:
+-            engine.convex_polygons[5].rotational_velocity = 0
+-        if engine.convex_polygons[4].rotation>0:
+-            engine.convex_polygons[4].rotational_velocity = -6.0
+-        else:
+-            engine.convex_polygons[4].rotational_velocity = 0
++            if (engine.convex_polygons[4].rotation < np.pi / 2.0):
++                engine.convex_polygons[4].rotational_velocity = 6.0
++            else:
++                engine.convex_polygons[4].rotational_velocity = 0
++        else:
++            if engine.convex_polygons[5].rotation<np.pi:
++                engine.convex_polygons[5].rotational_velocity = 6.0
++            else:
++                engine.convex_polygons[5].rotational_velocity = 0
++            if engine.convex_polygons[4].rotation>0:
++                engine.convex_polygons[4].rotational_velocity = -6.0
++            else:
++                engine.convex_polygons[4].rotational_velocity = 0
+ 
+-    if pygame.mouse.get_pressed()[0]:
+-        engine.convex_polygons.insert(-1, ConvexPolygon((0, 0), (40, 0), (40, 40), (0, 40), fixed=True))
+-        engine.convex_polygons[-2].Translate((pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
+-        time.sleep(0.2)
++        if pygame.mouse.get_pressed()[0]:
++            engine.convex_polygons.insert(-1, ConvexPolygon((0, 0), (40, 0), (40, 40), (0, 40), fixed=True))
++            engine.convex_polygons[-2].Translate((pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
++            time.sleep(0.2)
+ 
+-    delta_time = time.time()-now_time
+-    now_time += delta_time
+-    engine.Update(screen, delta_time)
++        delta_time = time.time()-now_time
++        now_time += delta_time
++        engine.Update(screen, delta_time)
+ 
+ 
+ 
+-    # --- Drawing code should go here
++        # --- Drawing code should go here
+ 
+-    # --- Go ahead and update the screen with what we've drawn.
+-    pygame.display.flip()
++        # --- Go ahead and update the screen with what we've drawn.
++        pygame.display.flip()
+ 
+-    # --- Limit to 60 frames per second
+-    clock.tick(60)
++        # --- Limit to 60 frames per second
++        clock.tick(60)
+ 
+-# Close the window and quit.
+-pygame.quit()
+\ No newline at end of file
++    # Close the window and quit.
++    pygame.quit()
+\ No newline at end of file
+Index: Ball.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nimport pygame\r\nclass Ball:\r\n    def __init__(self, posx = 100.0, posy = 100.0, radius = 10.0, mass_per_area=1.0):\r\n        self.mass_per_area = mass_per_area\r\n        self.area=np.pi*radius**2\r\n        self.radius = radius\r\n        self.rotational_inertia = (2.0/5.0) * self.mass_per_area * self.area * radius**2\r\n\r\n        self.rotational_velocity = 0\r\n\r\n        self.position = np.array((posx, posy))\r\n        self.velocity = np.array((-2.0, 0.0))\r\n        self.acceleration = np.array((0.0, 0.0))\r\n\r\n        self.fixed_in_space=False\r\n    def Display(self, screen):\r\n        pygame.draw.circle(screen, (255, 0, 0), self.position, self.radius)\r\n\r\n\r\nclass BallList:\r\n    def __init__(self, WIDTH, HEIGHT):\r\n        self.WIDTH = WIDTH\r\n        self.HEIGHT = HEIGHT\r\n        self.balls = []\r\n        self.gravity = np.array([0, -9.81*0.01])\r\n\r\n        for i in range(2):\r\n            self.balls.append(Ball(160.0*i-160, 160.0+i*5, 20.0))\r\n\r\n    def ComputeCollision(self, b1, b2):\r\n        b1tob2 = b2.position - b1.position\r\n        b1tob2 = b1tob2/np.linalg.norm(b1tob2)\r\n        v1i = np.dot(b1tob2, b1.velocity) * b1tob2\r\n        v1inormal = b1.velocity - v1i\r\n        v2i = np.dot(-b1tob2, b2.velocity) * (-b1tob2)\r\n        v2inormal = b2.velocity - v2i\r\n\r\n\r\n        v1f = (v1i * (b1.mass - b2.mass) + 2.0 * b2.mass * v2i)/(b1.mass + b2.mass)\r\n        v2f = (v2i * (b2.mass - b1.mass) + 2.0 * b1.mass * v1i)/(b1.mass + b2.mass)\r\n        b1.velocity = v1f + v1inormal\r\n        b2.velocity = v2f + v2inormal\r\n        offset = abs((b1.radius+b2.radius) - np.linalg.norm(b1.position-b2.position))\r\n        b1.position -= (b1tob2) * offset\r\n        b2.position += (b1tob2) * offset\r\n\r\n\r\n    def Update(self):\r\n        for i in range(len(self.balls)-1):\r\n            for j in range(i+1, len(self.balls)):\r\n                if(np.linalg.norm(self.balls[i].position-self.balls[j].position) <= (self.balls[i].radius + self.balls[j].radius)):\r\n                    self.ComputeCollision(self.balls[i], self.balls[j])\r\n        for i in range(len(self.balls)):\r\n            self.balls[i].position += self.balls[i].velocity\r\n            self.balls[i].velocity += self.balls[i].acceleration\r\n            self.balls[i].velocity *= 0.999\r\n\r\n            theta = np.radians(pygame.time.get_ticks()/10.0)\r\n            c, s = np.cos(theta), np.sin(theta)\r\n            R = np.array(((c, -s), (s, c)))\r\n            self.gravity.reshape((2, 1))\r\n            self.balls[i].acceleration = np.dot(R,self.gravity*4)\r\n            self.balls[i].acceleration.reshape((1, 2))\r\n            self.gravity.reshape((1, 2))\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Ball.py b/Ball.py
+--- a/Ball.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/Ball.py	(date 1716053065256)
+@@ -1,7 +1,7 @@
+ import numpy as np
+ import pygame
+ class Ball:
+-    def __init__(self, posx = 100.0, posy = 100.0, radius = 10.0, mass_per_area=1.0):
++    def __init__(self, posx = 100.0, posy = 100.0, radius = 10.0, mass_per_area=1.0, fixed_in_space = False):
+         self.mass_per_area = mass_per_area
+         self.area=np.pi*radius**2
+         self.radius = radius
+@@ -13,7 +13,7 @@
+         self.velocity = np.array((-2.0, 0.0))
+         self.acceleration = np.array((0.0, 0.0))
+ 
+-        self.fixed_in_space=False
++        self.fixed_in_space=fixed_in_space
+     def Display(self, screen):
+         pygame.draw.circle(screen, (255, 0, 0), self.position, self.radius)
+ 
+Index: LevelData.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>315,473;wall.png;216,108;315,311;90\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/LevelData.txt b/LevelData.txt
+--- a/LevelData.txt	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/LevelData.txt	(date 1716072486773)
+@@ -1,1 +1,2 @@
+-315,473;wall.png;216,108;315,311;90
++295,260;wall.png;275,194;295.0,260.0;-50;3
++281,557;wall.png;92,176;281.0,557.0;70;3
+Index: Game.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import copy\r\n\r\nimport pygame.key\r\n\r\nfrom PlacementFunctions import *\r\n\r\nimport os\r\n\r\nfrom LevelLoader import *\r\n\r\nBALL = 0\r\nPOLYGON = 1\r\n\r\nWIDTH = 600\r\nHEIGHT = 750\r\n\r\nQUIT = -1\r\nMENU = 0\r\nLEVEL_EDITOR = 1\r\nPLAY = 2\r\nMY_LEVELS = 3\r\n\r\npygame.init()\r\n\r\nscreen = pygame.display.set_mode((WIDTH,HEIGHT))\r\n\r\nbutton_name = \"textures/plus sign.png\"\r\nflipper_name = \"textures/flipper.png\"\r\nbumper_name = \"textures/bumper1.png\"\r\nwall_name = \"textures/wall.png\"\r\n\r\nbutton_tex = pygame.image.load(button_name)\r\nflipper_tex = pygame.image.load(flipper_name)\r\nbumper_tex = pygame.image.load(bumper_name)\r\nwall_tex = pygame.image.load(wall_name)\r\n\r\n\r\nlevel_map_name = \"textures/LEVEL MAP.png\"\r\nlevel_map_tex = pygame.image.load(level_map_name)\r\nmenu_name = \"textures/Menu.png\"\r\nmenu_tex = pygame.image.load(menu_name)\r\nplay_button_name = \"textures/play button.png\"\r\nplay_button_tex = pygame.image.load(play_button_name)\r\nlevel_editor_button_name = \"textures/level_editor button.png\"\r\nlevel_editor_button_tex = pygame.image.load(level_editor_button_name)\r\nmy_levels_button_name = \"textures/my_levels button.png\"\r\nmy_levels_button_tex = pygame.image.load(my_levels_button_name)\r\n\r\ndirectory = \"textures/levels_numbers\"\r\nlevels_numbers_names = os.listdir(directory)\r\nlevels_numbers_tex = [pygame.image.load(\"textures/levels_numbers/\" + name) for name in levels_numbers_names]\r\nclass GameComponent(MapObject):\r\n    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):\r\n        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)\r\n        self.physics_engineID = [-1, -1]#type, index\r\nclass Game:\r\n    def __init__(self, screen):\r\n        self.GameComponents = []\r\n        self.screen = screen\r\n        self.GameState = 1\r\n\r\n\r\n\r\n\r\n    def ShowComponents(self):\r\n        for i in range(len(self.GameComponents)):\r\n            if self.GameComponents[i].img != None:\r\n                self.GameComponents[i].update(self.screen)\r\n\r\ntransparent_background = pygame.Surface((WIDTH, HEIGHT))\r\ntransparent_background.set_alpha(0)\r\n\r\ngame = Game(screen)\r\ngame.GameState = LEVEL_EDITOR\r\n\r\nloop = True\r\nclock = pygame.time.Clock()\r\n\r\nescape = False\r\nwhile loop:\r\n    BACKGROUND_COLOR = (30, 90, 120)\r\n    #screen.fill(BACKGROUND_COLOR)\r\n    for event in pygame.event.get():\r\n        if event.type == pygame.QUIT:\r\n            loop = False\r\n        elif event.type == pygame.KEYDOWN:\r\n            if event.key == pygame.K_ESCAPE:\r\n                loop = False\r\n    if game.GameState == QUIT:\r\n        loop = False\r\n        break\r\n    if game.GameState == MENU:\r\n        level_map = MapObject(level_map_tex, level_map_name, WIDTH/2, HEIGHT/2, screen.get_size(), False)\r\n        menu = MapObject(menu_tex, menu_name, WIDTH/2, HEIGHT/2, screen.get_size(), False)\r\n        play_button = MapObject(play_button_tex, play_button_name, WIDTH/2, HEIGHT/2, (200, 200*play_button_tex.get_height()/play_button_tex.get_width()), False)\r\n        level_editor_button = MapObject(level_editor_button_tex, level_editor_button_name, WIDTH/2, HEIGHT/2+60, (200, 200*level_editor_button_tex.get_height()/level_editor_button_tex.get_width()), False)\r\n        my_levels_button = MapObject(my_levels_button_tex, my_levels_button_name, WIDTH/2, HEIGHT/2+120, (200, 200*my_levels_button_tex.get_height()/my_levels_button_tex.get_width()), False)\r\n\r\n        play_button.resize(0.3)\r\n        play_button.move_at((WIDTH/2, HEIGHT/2))\r\n        level_editor_button.resize(0.3)\r\n        level_editor_button.move_at((WIDTH / 2, HEIGHT / 2+60))\r\n        my_levels_button.resize(0.3)\r\n        my_levels_button.move_at((WIDTH/2, HEIGHT/2 + 120))\r\n\r\n        transparent_background.set_alpha(0)\r\n\r\n        for i in range(0, 255, 2):\r\n            clock.tick(60)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n        for i in range(255, 0, -2):\r\n            clock.tick(60)\r\n            menu.update(screen)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n\r\n        while game.GameState==MENU:\r\n            events = pygame.event.get()\r\n            for event in events:\r\n                if event.type == pygame.QUIT:\r\n                    game.GameState = QUIT\r\n                    loop = False\r\n                if event.type == pygame.KEYDOWN:\r\n                    if event.key == pygame.K_ESCAPE:\r\n                        escape = not escape\r\n                if event.type == pygame.MOUSEBUTTONDOWN:\r\n                    if level_editor_button.collidesmouse():\r\n                        game.GameState = LEVEL_EDITOR\r\n                    if play_button.collidesmouse():\r\n                        game.GameState = PLAY\r\n                    if my_levels_button.collidesmouse():\r\n                        game.GameState = MY_LEVELS\r\n            clock.tick(60)\r\n\r\n            if play_button.collidesmouse():\r\n                if play_button.rect.size[0]/play_button.original_size[0] < 1.05 and play_button.rect.size[1]/play_button.original_size[1] < 1.05:\r\n                    play_button.resize(1.02)\r\n                    play_button.move_at((WIDTH/2, HEIGHT/2))\r\n            else:\r\n                if play_button.rect.size[0] / play_button.original_size[0] > 0.95 and play_button.rect.size[1] / play_button.original_size[1] > 0.95:\r\n                    play_button.resize(0.98)\r\n                    play_button.move_at((WIDTH / 2, HEIGHT / 2))\r\n\r\n            if level_editor_button.collidesmouse():\r\n                if level_editor_button.rect.size[0]/level_editor_button.original_size[0] < 1.05 and level_editor_button.rect.size[1]/level_editor_button.original_size[1] < 1.05:\r\n                    level_editor_button.resize(1.02)\r\n                    level_editor_button.move_at((WIDTH/2, HEIGHT/2+60))\r\n            else:\r\n                if level_editor_button.rect.size[0] / level_editor_button.original_size[0] > 0.95 and level_editor_button.rect.size[1] / level_editor_button.original_size[1] > 0.95:\r\n                    level_editor_button.resize(0.98)\r\n                    level_editor_button.move_at((WIDTH / 2, HEIGHT / 2+60))\r\n\r\n            if my_levels_button.collidesmouse():\r\n                if my_levels_button.rect.size[0]/my_levels_button.original_size[0] < 1.05 and my_levels_button.rect.size[1]/my_levels_button.original_size[1] < 1.05:\r\n                    my_levels_button.resize(1.02)\r\n                    my_levels_button.move_at((WIDTH/2, HEIGHT/2+120))\r\n            else:\r\n                if my_levels_button.rect.size[0] / my_levels_button.original_size[0] > 0.95 and my_levels_button.rect.size[1] / my_levels_button.original_size[1] > 0.95:\r\n                    my_levels_button.resize(0.98)\r\n                    my_levels_button.move_at((WIDTH / 2, HEIGHT / 2+120))\r\n            menu.update(screen)\r\n            play_button.update(screen)\r\n            level_editor_button.update(screen)\r\n            my_levels_button.update(screen)\r\n            pygame.display.update()\r\n\r\n    if game.GameState == LEVEL_EDITOR:\r\n        previous_background = screen\r\n\r\n\r\n        add_button = MapObject(pygame.transform.smoothscale(button_tex, (60,60)), button_name, WIDTH-60,HEIGHT-60)\r\n        flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, 0,0)\r\n        flipper_choose.move_at((WIDTH/2, HEIGHT/2))\r\n        bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, 0)\r\n        bumper_choose.move_at((WIDTH / 2 + 150, HEIGHT / 2))\r\n        wall_choose = MapObject(pygame.transform.smoothscale(wall_tex, (60,60 * (wall_tex.get_height()/wall_tex.get_width()))), wall_name, WIDTH/2 - 150,HEIGHT/2)\r\n        wall_choose.move_at((WIDTH / 2 - 150, HEIGHT / 2))\r\n\r\n\r\n        transparent_background.set_alpha(128)\r\n        transparent_background.fill((0, 0, 0))\r\n\r\n        SHOW_EVERYTHING = 0\r\n        CHOOSE_OBJECT = 1\r\n        editing_sate = SHOW_EVERYTHING\r\n\r\n\r\n        selected_object = None, None\r\n\r\n        selected_objects = []\r\n        copied_objects = []\r\n\r\n        modify_option = REPOS_OBJECT\r\n\r\n        for i in range(0, 255, 2):\r\n            clock.tick(60)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n        for i in range(255, 0, -2):\r\n            clock.tick(60)\r\n            screen.fill(BACKGROUND_COLOR)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n\r\n        transparent_background.set_alpha(128)\r\n        while game.GameState==LEVEL_EDITOR:\r\n\r\n            FLIPPER = 0\r\n            BUMPER = 1\r\n            WALL = 2\r\n\r\n            clock.tick(60)\r\n\r\n            screen.fill(BACKGROUND_COLOR)\r\n\r\n            game.ShowComponents()\r\n\r\n            events = pygame.event.get()\r\n\r\n            if editing_sate == CHOOSE_OBJECT:\r\n\r\n                for i in range(len(events)):\r\n                    event = events[i]\r\n                    if event.type == pygame.KEYDOWN:\r\n                        if event.key == pygame.K_ESCAPE:\r\n                            editing_sate = SHOW_EVERYTHING\r\n                            events.pop(i)\r\n                            break\r\n\r\n                chose_object = -1\r\n\r\n\r\n                screen.blit(previous_background, (0, 0))\r\n                screen.blit(transparent_background, (0, 0))\r\n                bumper_choose.update(screen)\r\n                wall_choose.update(screen)\r\n                flipper_choose.update(screen)\r\n\r\n                if bumper_choose.collidesmouse():\r\n                    if pygame.mouse.get_pressed()[0]:\r\n                        pygame.draw.rect(screen, (255, 0, 0), bumper_choose.rect, 3)\r\n                        chose_object = BUMPER\r\n                    else:\r\n                        pygame.draw.rect(screen, (0, 255, 0), bumper_choose.rect, 3)\r\n                if flipper_choose.collidesmouse():\r\n                    if pygame.mouse.get_pressed()[0]:\r\n                        pygame.draw.rect(screen, (255, 0, 0), flipper_choose.rect, 3)\r\n                        chose_object = FLIPPER\r\n                    else:\r\n                        pygame.draw.rect(screen, (0, 255, 0), flipper_choose.rect, 3)\r\n                if wall_choose.collidesmouse():\r\n                    if pygame.mouse.get_pressed()[0]:\r\n                        pygame.draw.rect(screen, (255, 0, 0), wall_choose.rect, 3)\r\n                        chose_object = WALL\r\n                    else:\r\n                        pygame.draw.rect(screen, (0, 255, 0), wall_choose.rect, 3)\r\n                if chose_object!=-1:\r\n                    editing_sate = SHOW_EVERYTHING\r\n                    if chose_object == BUMPER:\r\n                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(bumper_tex, (bumper_tex.get_size())), bumper_name, WIDTH/2, HEIGHT/2))\r\n                        center = game.GameComponents[-1].rect.center\r\n                        game.GameComponents[-1].resize(60/game.GameComponents[-1].rect.size[0])\r\n                        game.GameComponents[-1].move_at(center)\r\n                    if chose_object == FLIPPER:\r\n                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(flipper_tex, (flipper_tex.get_size())), flipper_name, WIDTH/2, HEIGHT/2))\r\n                        center = game.GameComponents[-1].rect.center\r\n                        game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])\r\n                        game.GameComponents[-1].move_at(center)\r\n                    if chose_object == WALL:\r\n                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(wall_tex, (wall_tex.get_size())), wall_name, WIDTH/2, HEIGHT/2))\r\n                        center = game.GameComponents[-1].rect.center\r\n                        game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])\r\n                        game.GameComponents[-1].move_at(center)\r\n\r\n            if editing_sate == SHOW_EVERYTHING:\r\n                add_button.update(screen)\r\n                collided = False\r\n                shifting = False\r\n                if pygame.key.get_pressed()[pygame.K_LSHIFT]:\r\n                    shifting = True\r\n                if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_c]:\r\n                    copied_elements = selected_objects[:]\r\n                    print(\"copied\")\r\n                for event in events:\r\n                    if event.type == pygame.KEYDOWN:\r\n                        if event.key == pygame.K_s:\r\n                            SaveContent(game.GameComponents, \"LevelData.txt\")\r\n                        elif event.key == pygame.K_l:\r\n                            game.GameComponents = ReadContent(\"LevelData.txt\")\r\n\r\n                for event in events:\r\n                    if event.type == pygame.KEYDOWN:\r\n                        if event.key == pygame.K_v:\r\n                            if pygame.key.get_pressed()[pygame.K_LCTRL]:\r\n                                for i in range(len(copied_elements)):\r\n                                    print(\"pasted\")\r\n                                    obj = copied_elements[i][0]\r\n                                    game.GameComponents.append(GameComponent(obj.original_img, obj.imgname, obj.rect.center[0], obj.rect.center[1]))\r\n                                    game.GameComponents[-1].rect.size = obj.original_rect.size\r\n                                    game.GameComponents[-1].scale_to_size(obj.scaled_img.get_rect().size)\r\n                                    game.GameComponents[-1].rotate_around_point(obj.angle)\r\n                                    game.GameComponents[-1].originaloffset = obj.originaloffset\r\n                                    game.GameComponents[-1].rotationcenter = obj.rotationcenter\r\n                                    print(\"tried\")\r\n\r\n                    if event.type == pygame.MOUSEBUTTONDOWN and add_button.collidesmouse():\r\n                        editing_sate = CHOOSE_OBJECT\r\n                    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:\r\n                        if modify_option == REPOS_OBJECT:\r\n                            modify_option = RESCALE_OBJECT\r\n                        else:\r\n                            modify_option = REPOS_OBJECT\r\n                    for i in range(len(game.GameComponents)-1, -1, -1):\r\n                        component = game.GameComponents[i]\r\n                        if event.type == pygame.MOUSEBUTTONDOWN and component.collidesmouse():\r\n                            collided = True\r\n                            selected_object = component, i\r\n                            if shifting:\r\n                                result = list((i == j for object, j in selected_objects))\r\n                                if not any(result):\r\n                                    selected_objects.append((component, i))\r\n                                else:\r\n                                    selected_objects.pop(result.index(True))\r\n                                    if len(selected_objects) == 1:\r\n                                        selected_object = selected_objects[0][0], selected_objects[0][1]\r\n                            else:\r\n                                result = list((i == j for object, j in selected_objects))\r\n                                if not any(result):\r\n                                    selected_objects.clear()\r\n                                    selected_objects.append((component, i))\r\n\r\n                            if event.button == pygame.BUTTON_LEFT:\r\n                                result = list((i == j for object, j in selected_objects))\r\n                                if any(result):\r\n                                    for j in range(len(selected_objects)):\r\n                                        object, index = selected_objects[j]\r\n                                        object.reposition_option(modify_option)\r\n                                else:\r\n                                    component.reposition_option(modify_option)\r\n\r\n                            elif event.button == pygame.BUTTON_RIGHT:\r\n                                component.reposition_option(REPOS_ROTATION_CENTER)\r\n                            break\r\n                        elif event.type == pygame.MOUSEBUTTONUP:\r\n                            component.reposition_option(DONT_MOVE)\r\n                for event in events:\r\n                    if event.type == pygame.MOUSEBUTTONDOWN and not collided:\r\n                        selected_object = None, None\r\n                        selected_objects.clear()\r\n                    if event.type == pygame.KEYDOWN:\r\n                        if event.key == pygame.K_m:\r\n                            for i in range(len(selected_objects)):\r\n                                selected_objects[i][0].flip_x_axis()\r\n\r\n                if selected_object[0] != None and len(selected_objects)==1:\r\n                    object, index = selected_object\r\n                    pygame.draw.rect(screen, (0, 255, 0), object.rect, 3)\r\n                    for event in events:\r\n                        if event.type == pygame.KEYDOWN:\r\n                            if event.key == pygame.K_UP:\r\n                                object.rotate_around_point(10)\r\n                            if event.key == pygame.K_DOWN:\r\n                                object.rotate_around_point(-10)\r\n                            if event.key == pygame.K_DELETE:\r\n                                game.GameComponents.pop(index)\r\n                                selected_object = None, None\r\n                elif len(selected_objects)>1:\r\n                    for i in range(len(selected_objects)):\r\n                        object, index = selected_objects[i]\r\n                        pygame.draw.rect(screen, (0, 255, 0), object.rect, 3)\r\n                        for event in events:\r\n                            if event.type == pygame.KEYDOWN:\r\n                                if event.key == pygame.K_UP:\r\n                                    object.rotate_around_point(10)\r\n                                if event.key == pygame.K_DOWN:\r\n                                    object.rotate_around_point(-10)\r\n                                if event.key == pygame.K_DELETE:\r\n                                    game.GameComponents.pop(index)\r\n                                    selected_objects.pop(i)\r\n                                    i=i-1\r\n                                    selected_object = None, None\r\n            for event in events:\r\n                if event.type == pygame.QUIT:\r\n                    game.GameState = QUIT\r\n                    loop = False\r\n                if event.type == pygame.MOUSEBUTTONDOWN and add_button.collidesmouse():\r\n                    editing_sate = CHOOSE_OBJECT\r\n                if event.type == pygame.KEYDOWN:\r\n                    if event.key == pygame.K_ESCAPE:\r\n                        game.GameState = MENU\r\n            pygame.display.update()\r\n        game.GameState = MENU\r\n        escape = False\r\n\r\n\r\n\r\n    if game.GameState == PLAY:\r\n        level_map = MapObject(level_map_tex, level_map_name, WIDTH/2, HEIGHT/2, (screen.get_size()))\r\n\r\n        n_levels = 5\r\n        levels_numbers = []\r\n\r\n        for i in range(n_levels):\r\n            levels_numbers.append(MapObject(levels_numbers_tex[i], levels_numbers_names[i], (WIDTH/4)*(i%3) + (WIDTH)/4, (HEIGHT/4)*int(i/3) + HEIGHT/4))\r\n            levels_numbers[i].resize(0.7)\r\n        shadows = [pygame.Surface(pygame.Vector2(levels_numbers[0].rect.size)*2, pygame.SRCALPHA) for i in range(n_levels)]\r\n        for i in range(len(shadows)):\r\n            n = int(levels_numbers[0].rect.size[0])\r\n            for j in range(n, -1, -1):\r\n                c = (n-j)/n*700\r\n                if c>255:\r\n                    c=255\r\n                pygame.draw.circle(shadows[i], (0, 0, 0, c), (shadows[i].get_width()/2, shadows[i].get_height()/2), j)\r\n        for i in range(len(shadows)):\r\n            shadows[i] = MapObject(shadows[i], \"\", (WIDTH/4)*(i%3) + (WIDTH)/4, (HEIGHT/4)*int(i/3) + HEIGHT/4)\r\n            shadows[i].resize(0.7*0.8)\r\n        for i in range(0, 255, 2):\r\n            clock.tick(60)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n        for i in range(255, 0, -2):\r\n            clock.tick(60)\r\n            level_map.update(screen)\r\n            screen.blit(transparent_background, (0,0))\r\n            transparent_background.set_alpha(i)\r\n            pygame.display.update()\r\n        while game.GameState == PLAY:\r\n            events = pygame.event.get()\r\n\r\n            for event in events:\r\n                if event.type == pygame.QUIT:\r\n                    loop = False\r\n                    game.GameState = QUIT\r\n                if event.type == pygame.KEYDOWN:\r\n                    if event.key == pygame.K_ESCAPE:\r\n                        game.GameState = MENU\r\n\r\n            for i in range(n_levels):\r\n                if levels_numbers[i].collidesmouse():\r\n                    if(levels_numbers[i].rect.size[0]/levels_numbers[i].original_rect.size[0] < 0.8):\r\n                        levels_numbers[i].resize(1.03)\r\n                        shadows[i].resize(1.05)\r\n                else:\r\n                    if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] > 0.7):\r\n                        levels_numbers[i].resize(0.97)\r\n                        shadows[i].resize(0.95)\r\n            for i in range(n_levels):\r\n                if levels_numbers[i].collidesmouse():\r\n                    if(shadows[i].rect.size[0]/shadows[i].original_rect.size[0] < 0.7*0.9):\r\n                        shadows[i].resize(1.03)\r\n                else:\r\n                    if (shadows[i].rect.size[0] / shadows[i].original_rect.size[0] > 0.7*0.6):\r\n                        shadows[i].resize(0.97)\r\n\r\n            level_map.update(screen)\r\n            for i in range(len(shadows)):\r\n                shadow = shadows[i]\r\n                shadow.update(screen)\r\n            for i in range(n_levels):\r\n                levels_numbers[i].update(screen)\r\n\r\n            pygame.display.update()\r\n\r\n    if game.GameState == MY_LEVELS:\r\n        pass\r\n    pygame.display.update()\r\n\r\n\r\n\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Game.py b/Game.py
+--- a/Game.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/Game.py	(date 1716072471390)
+@@ -19,17 +19,22 @@
+ LEVEL_EDITOR = 1
+ PLAY = 2
+ MY_LEVELS = 3
++RUN_LEVEL = 4
+ 
+ pygame.init()
+ 
+ screen = pygame.display.set_mode((WIDTH,HEIGHT))
+ 
+ button_name = "textures/plus sign.png"
++save_button_name = "textures/savebutton.png"
++load_button_name = "textures/loadbutton.png"
+ flipper_name = "textures/flipper.png"
+ bumper_name = "textures/bumper1.png"
+ wall_name = "textures/wall.png"
+ 
+ button_tex = pygame.image.load(button_name)
++save_button_tex = pygame.image.load(save_button_name)
++load_button_tex = pygame.image.load(load_button_name)
+ flipper_tex = pygame.image.load(flipper_name)
+ bumper_tex = pygame.image.load(bumper_name)
+ wall_tex = pygame.image.load(wall_name)
+@@ -49,10 +54,9 @@
+ directory = "textures/levels_numbers"
+ levels_numbers_names = os.listdir(directory)
+ levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
+-class GameComponent(MapObject):
+-    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None):
+-        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True)
+-        self.physics_engineID = [-1, -1]#type, index
++from PlacementFunctions import GameComponent
++from PlacementFunctions import PhysicsEngine
++engine = PhysicsEngine()
+ class Game:
+     def __init__(self, screen):
+         self.GameComponents = []
+@@ -71,7 +75,7 @@
+ transparent_background.set_alpha(0)
+ 
+ game = Game(screen)
+-game.GameState = LEVEL_EDITOR
++game.GameState = RUN_LEVEL
+ 
+ loop = True
+ clock = pygame.time.Clock()
+@@ -172,6 +176,9 @@
+ 
+ 
+         add_button = MapObject(pygame.transform.smoothscale(button_tex, (60,60)), button_name, WIDTH-60,HEIGHT-60)
++        save_button = MapObject(pygame.transform.smoothscale(save_button_tex, (120, 120*save_button_tex.get_height()/save_button_tex.get_width())), save_button_name, WIDTH-70, 70)
++        load_button = MapObject(pygame.transform.smoothscale(load_button_tex, (120, 120*load_button_tex.get_height()/load_button_tex.get_width())), load_button_name, WIDTH-70, 140)
++
+         flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, 0,0)
+         flipper_choose.move_at((WIDTH/2, HEIGHT/2))
+         bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, 0)
+@@ -262,23 +269,25 @@
+                 if chose_object!=-1:
+                     editing_sate = SHOW_EVERYTHING
+                     if chose_object == BUMPER:
+-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(bumper_tex, (bumper_tex.get_size())), bumper_name, WIDTH/2, HEIGHT/2))
++                        game.GameComponents.append(GameComponent(bumper_tex, bumper_name, WIDTH/2, HEIGHT/2, object_type = BUMPER_TYPE))
+                         center = game.GameComponents[-1].rect.center
+                         game.GameComponents[-1].resize(60/game.GameComponents[-1].rect.size[0])
+                         game.GameComponents[-1].move_at(center)
+                     if chose_object == FLIPPER:
+-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(flipper_tex, (flipper_tex.get_size())), flipper_name, WIDTH/2, HEIGHT/2))
++                        game.GameComponents.append(GameComponent(flipper_tex, flipper_name, WIDTH/2, HEIGHT/2, object_type = FLIPPER_TYPE))
+                         center = game.GameComponents[-1].rect.center
+                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
+                         game.GameComponents[-1].move_at(center)
+                     if chose_object == WALL:
+-                        game.GameComponents.append(GameComponent(pygame.transform.smoothscale(wall_tex, (wall_tex.get_size())), wall_name, WIDTH/2, HEIGHT/2))
++                        game.GameComponents.append(GameComponent(wall_tex, wall_name, WIDTH/2, HEIGHT/2, object_type = WALL_TYPE))
+                         center = game.GameComponents[-1].rect.center
+                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
+                         game.GameComponents[-1].move_at(center)
+ 
+             if editing_sate == SHOW_EVERYTHING:
+                 add_button.update(screen)
++                load_button.update(screen)
++                save_button.update(screen)
+                 collided = False
+                 shifting = False
+                 if pygame.key.get_pressed()[pygame.K_LSHIFT]:
+@@ -287,18 +296,19 @@
+                     copied_elements = selected_objects[:]
+                     print("copied")
+                 for event in events:
+-                    if event.type == pygame.KEYDOWN:
+-                        if event.key == pygame.K_s:
++                    if event.type == pygame.MOUSEBUTTONDOWN:
++                        if save_button.collidesmouse():
+                             SaveContent(game.GameComponents, "LevelData.txt")
+-                        elif event.key == pygame.K_l:
++                        if load_button.collidesmouse():
+                             game.GameComponents = ReadContent("LevelData.txt")
++                            selected_objects.clear()
++                            selected_object = None, None
+ 
+                 for event in events:
+                     if event.type == pygame.KEYDOWN:
+                         if event.key == pygame.K_v:
+                             if pygame.key.get_pressed()[pygame.K_LCTRL]:
+                                 for i in range(len(copied_elements)):
+-                                    print("pasted")
+                                     obj = copied_elements[i][0]
+                                     game.GameComponents.append(GameComponent(obj.original_img, obj.imgname, obj.rect.center[0], obj.rect.center[1]))
+                                     game.GameComponents[-1].rect.size = obj.original_rect.size
+@@ -306,7 +316,7 @@
+                                     game.GameComponents[-1].rotate_around_point(obj.angle)
+                                     game.GameComponents[-1].originaloffset = obj.originaloffset
+                                     game.GameComponents[-1].rotationcenter = obj.rotationcenter
+-                                    print("tried")
++                                    game.GameComponents[-1].component_type = obj.component_type
+ 
+                     if event.type == pygame.MOUSEBUTTONDOWN and add_button.collidesmouse():
+                         editing_sate = CHOOSE_OBJECT
+@@ -432,7 +442,7 @@
+             pygame.display.update()
+         while game.GameState == PLAY:
+             events = pygame.event.get()
+-
++            clicked = False
+             for event in events:
+                 if event.type == pygame.QUIT:
+                     loop = False
+@@ -440,12 +450,19 @@
+                 if event.type == pygame.KEYDOWN:
+                     if event.key == pygame.K_ESCAPE:
+                         game.GameState = MENU
++                if event.type == pygame.MOUSEBUTTONDOWN:
++                    if event.button == pygame.K_LEFT:
++                        clicked = True
++            pressed = pygame.key.get_pressed()
+ 
+             for i in range(n_levels):
+                 if levels_numbers[i].collidesmouse():
+                     if(levels_numbers[i].rect.size[0]/levels_numbers[i].original_rect.size[0] < 0.8):
+                         levels_numbers[i].resize(1.03)
+                         shadows[i].resize(1.05)
++
++                    game.GameState = RUN_LEVEL
++                    print("clicked")
+                 else:
+                     if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] > 0.7):
+                         levels_numbers[i].resize(0.97)
+@@ -465,6 +482,31 @@
+             for i in range(n_levels):
+                 levels_numbers[i].update(screen)
+ 
++            pygame.display.update()
++    if game.GameState == RUN_LEVEL:
++        game.GameComponents = ReadContent("LevelData.txt")
++        engine.clear()
++        for component in game.GameComponents:
++            component.connect_with_physics_engine(engine)
++        while game.GameState == RUN_LEVEL:
++            clock.tick(60)
++            screen.fill((0, 120, 35))
++            events = pygame.event.get()
++
++            for event in events:
++                if event.type == pygame.QUIT:
++                    loop = False
++                    game.GameState = QUIT
++                if event.type == pygame.KEYDOWN:
++                    if event.key == pygame.K_ESCAPE:
++                        game.GameState = MENU
++            engine.Update(screen, 1.0/60.0)
++            game.ShowComponents()
++            for polygon in engine.convex_polygons:
++                for point in polygon.points:
++                    pygame.draw.circle(screen, (255, 0, 0), point, 3)
++            for ball in engine.balls:
++                pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
+             pygame.display.update()
+ 
+     if game.GameState == MY_LEVELS:
+Index: Physics2D.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nimport pygame\r\nimport Ball\r\n\r\n\r\ndef SignedAngle(vec1):\r\n    if np.linalg.norm(vec1) == 0:\r\n        return 0\r\n    vec1 = np.array(vec1)\r\n    vec1 = vec1 / np.linalg.norm(vec1)\r\n    X_vec = np.array((1, 0))\r\n    Y_vec = np.array((0, 1))\r\n    dot1 = np.dot(vec1, X_vec)\r\n    dot2 = np.dot(vec1, Y_vec)\r\n\r\n    angle = (((dot2 > 0) * 2 - 1) * np.arccos(dot1)) / np.pi * 180.0\r\n    if(angle<0):\r\n        angle = 360+angle\r\n    return angle\r\n\r\ndef LineIntersection(line1, line2):\r\n    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])\r\n    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])\r\n\r\n    def det(a, b):\r\n        return a[0] * b[1] - a[1] * b[0]\r\n\r\n    div = det(xdiff, ydiff)\r\n    if div == 0:\r\n       #raise Exception('lines do not intersect')\r\n        return False\r\n\r\n    d = (det(*line1), det(*line2))\r\n    x = det(d, xdiff) / div\r\n    y = det(d, ydiff) / div\r\n    return x, y\r\n\r\ndef SegmentIntersection(A, B, C, D):\r\n    intersection = LineIntersection((A, B), (C, D))\r\n    if(intersection == False):\r\n        return False, np.array((0, 0))\r\n\r\n    v1 = B-A\r\n    v2 = D-C\r\n\r\n    if 1>=np.dot((intersection - A)/np.linalg.norm(v1), v1/np.linalg.norm(v1))>=0 and 1>=np.dot((intersection - C)/np.linalg.norm(v2), v2/np.linalg.norm(v2))>=0:\r\n        return True, intersection\r\n    else:\r\n        return False, np.array((0, 0))\r\n\r\nclass ConvexPolygon:\r\n    def __init__(self, *points, fixed = False, fixed_rotation = False, move_center_of_mass = (0, 0)):\r\n        self.fixed_in_space = fixed\r\n        self.fixed_rotation = fixed_rotation\r\n        self.points = list(points)\r\n        self.center = np.array([0, 0])\r\n        for i in range(len(self.points)):\r\n            self.points[i] = np.array(self.points[i])\r\n        self.originalpoints = self.points[:]\r\n        self.center_of_mass = np.array((0, 0))\r\n        self.CreateConvexHull()\r\n        self.mean_point = sum(self.points) / len(self.points)\r\n        self.area = 0\r\n        self.FindCenterOfMass()\r\n        self.center_of_mass+=np.array(move_center_of_mass)\r\n\r\n        for i in range(len(self.points)):\r\n            self.points[i] = self.points[i] - self.center_of_mass\r\n        for i in range(len(self.originalpoints)):\r\n            self.originalpoints[i] = self.originalpoints[i] - self.center_of_mass\r\n        self.mean_point = self.mean_point - self.center_of_mass\r\n        self.center_of_mass = self.center_of_mass - self.center_of_mass\r\n\r\n        self.true_position = self.center_of_mass\r\n\r\n        self.mass_per_area = 1\r\n        self.rotational_inertia = 0\r\n\r\n        self.SetRotationalInertia()\r\n\r\n        self.velocity = np.array((0, 0))\r\n        self.rotation = 0\r\n        self.rotational_velocity = 0 #in radians/s\r\n\r\n        self.simple_radius = 0\r\n        self.FindSimpleRadius()\r\n\r\n    def CreateConvexHull(self):\r\n        points = self.points[:]\r\n        points.sort(key=lambda x: x[1])\r\n        lowest = points[0]\r\n        points = points[1:]\r\n        points.sort(key=lambda x: SignedAngle(x - lowest))\r\n\r\n        stack = [lowest, points[0]]\r\n        i = 1\r\n        while i < len(points):\r\n            vec1 = stack[-1] - stack[-2]\r\n            vec2 = points[i] - stack[-1]\r\n            rotated_vec1 = np.array((-vec1[1], vec1[0]))\r\n            while (np.dot(vec2, rotated_vec1) <= 0 and len(stack) > 2):\r\n                stack.pop(-1)\r\n                vec1 = stack[-1] - stack[-2]\r\n                vec2 = points[i] - stack[-1]\r\n                rotated_vec1 = np.array((-vec1[1], vec1[0]))\r\n            stack.append(points[i])\r\n            i += 1\r\n        self.points = stack[:]\r\n\r\n    def DisplayPoints(self, screen):\r\n        connect = True\r\n        for point in self.points:\r\n            pygame.draw.circle(screen, (255, 0, 0), point, 5)\r\n        if connect:\r\n            for point in range(len(self.points)):\r\n                pygame.draw.line(screen, (255, 0, 0), self.points[point],self.points[(point+1)%len(self.points)],  5)\r\n        self.ShowMeanPoint(screen)\r\n        self.ShowCenterOfMass(screen)\r\n\r\n    def DisplayAllPoints(self, screen):\r\n        for point in self.originalpoints:\r\n            pygame.draw.circle(screen, (255, 0, 0), point, 5)\r\n        self.ShowMeanPoint(screen)\r\n        self.ShowCenterOfMass(screen)\r\n\r\n    def ShowMeanPoint(self, screen):\r\n        pygame.draw.circle(screen, (255, 255, 0), self.mean_point, 5)\r\n\r\n    def ShowCenterOfMass(self, screen):\r\n        pygame.draw.circle(screen, (0, 255, 0), self.center_of_mass, 5)\r\n\r\n    def FindCenterOfMass(self):\r\n        points = self.points[:]\r\n        points.sort(key = lambda x : (x[1], x[0]))\r\n        center = np.array((0, 0))\r\n        area = 0\r\n        for i in range(0, len(points) - 2):\r\n            triangle_center_of_mass = (points[i] + points[i + 1] + points[i + 2]) / 3.0\r\n            triangle_area = (1.0 / 2.0) * abs(\r\n                    points[i + 0][0] * (points[i + 1][1] - points[i + 2][1]) +\r\n                    points[i + 1][0] * (points[i + 2][1] - points[i + 0][1]) +\r\n                    points[i + 2][0] * (points[i + 0][1] - points[i + 1][1]))\r\n\r\n            center = center + triangle_center_of_mass*triangle_area\r\n            area = area + triangle_area\r\n\r\n        self.center_of_mass = center/area\r\n        #print(self.center_of_mass)\r\n        self.area = area\r\n    def Translate(self, translation):\r\n        translation = np.array(translation)\r\n        self.true_position = self.true_position + translation\r\n        for i in range(len(self.points)):\r\n            self.points[i] = self.points[i] + translation\r\n        for i in range(len(self.originalpoints)):\r\n            self.originalpoints[i] = self.originalpoints[i] + translation\r\n        self.mean_point = self.mean_point + translation\r\n        self.center_of_mass = self.center_of_mass + translation\r\n\r\n    def Rotate(self, rotation):\r\n        self.rotation+=rotation\r\n        matrix = np.array(((np.cos(rotation), -np.sin(rotation)), (np.sin(rotation), np.cos(rotation))))\r\n        for i in range(len(self.points)):\r\n            self.points[i] = self.points[i] - self.center_of_mass\r\n            self.points[i] = matrix.dot(self.points[i])\r\n            self.points[i] = self.points[i] + self.center_of_mass\r\n        for i in range(len(self.originalpoints)):\r\n            self.originalpoints[i] = self.originalpoints[i] - self.center_of_mass\r\n            self.originalpoints[i] = matrix.dot(self.originalpoints[i])\r\n            self.originalpoints[i] = self.originalpoints[i] + self.center_of_mass\r\n        self.mean_point = self.mean_point-self.center_of_mass\r\n        self.mean_point = matrix.dot(self.mean_point)\r\n        self.mean_point = self.mean_point + self.center_of_mass\r\n    def GoTo(self, position):\r\n        translation = position - self.center_of_mass\r\n        self.true_position = self.true_position + translation\r\n        for i in range(len(self.points)):\r\n            self.points[i] = self.points[i] + translation\r\n        for i in range(len(self.originalpoints)):\r\n            self.originalpoints[i] = self.originalpoints[i] + translation\r\n        self.mean_point = self.mean_point + translation\r\n        self.center_of_mass = self.center_of_mass + translation\r\n    def SetRotationalInertia(self):\r\n        self.points.sort(key = lambda x : x[1])\r\n        for i in range(len(self.points)-2):\r\n            point1 = self.points[i]\r\n            point2 = self.points[i+1]\r\n            point3 = self.points[i+2]\r\n\r\n            u = point2 - point1\r\n            v = point3 - point1\r\n            I = (self.mass_per_area * np.linalg.norm(np.cross(u, v)) / 12.0) * (np.linalg.norm(u)+np.linalg.norm(v) + np.dot(u, v))\r\n\r\n            m = self.mass_per_area * (1.0/2.0) * abs(point1[0] * (point2[1] - point3[1]) + point2[0] * (point3[1] - point1[1]) + point3[0] * (point1[1] - point2[1]))\r\n\r\n            self.rotational_inertia += I + m * np.linalg.norm(self.center_of_mass - (point1 + point2 + point3)/3.0)**2\r\n    def FindSimpleRadius(self):\r\n        max = 0\r\n        for point in self.points:\r\n            if np.linalg.norm(point - self.center_of_mass) > max:\r\n                max = np.linalg.norm(point - self.center_of_mass)\r\n        self.simple_radius = max\r\n    def MoveCenterOfMass(self, offset : tuple):\r\n        offset = np.array(offset)\r\n        self.center_of_mass+=offset\r\n        self.SetRotationalInertia()\r\n\r\nclass PhysicsEngine:\r\n    def __init__(self):\r\n        self.convex_polygons = []\r\n        self.balls = []\r\n\r\n    def FindAndSolvePolygonsCollision(self, pol1 : ConvexPolygon, pol2 : ConvexPolygon):\r\n        #DIAGONALS THEOREM\r\n        minp1 = min(pol1.points, key = lambda x : x[1])\r\n        minp2 = min(pol2.points, key=lambda x: x[1])\r\n        pol1.points.sort(key = lambda x : SignedAngle(x - minp1))\r\n        pol2.points.sort(key=lambda x: SignedAngle(x - minp2))\r\n\r\n        offset_coeff = 2.0\r\n\r\n        for i in range(len(pol1.points)):\r\n            p1 = pol1.points[i]\r\n            p2 = pol1.points[(i + 1)%len(pol1.points)]\r\n\r\n            for j in range(len(pol2.points)):\r\n                intersection = SegmentIntersection(p1, p2, pol2.points[j], pol2.center_of_mass)\r\n                if intersection[0] == True:\r\n                    intersection = intersection[1]\r\n                    vec = intersection - pol2.points[j]\r\n                    if pol1.fixed_in_space == True and pol2.fixed_in_space == True:\r\n                        continue\r\n                    if pol1.fixed_in_space == False and pol2.fixed_in_space == False:\r\n                        pol1.Translate(-offset_coeff/2.0 * (vec))\r\n                        pol2.Translate(offset_coeff/2.0 * (vec))\r\n                    elif pol1.fixed_in_space == True:\r\n                        pol2.Translate(offset_coeff * (vec))\r\n                    elif pol2.fixed_in_space == True:\r\n                        pol1.Translate(-offset_coeff * (vec))\r\n                    normal = (p2-p1)\r\n                    normal = np.array((normal[1], -normal[0]))\r\n                    normal = normal/np.linalg.norm(normal)\r\n                    self.ComputeCollisionResponse(pol1, pol2, intersection, normal)\r\n\r\n        for i in range(len(pol2.points)):\r\n            p1 = pol2.points[i]\r\n            p2 = pol2.points[(i + 1)%len(pol2.points)]\r\n\r\n            for j in range(len(pol1.points)):\r\n                intersection = SegmentIntersection(p1, p2, pol1.points[j], pol1.center_of_mass)\r\n                if intersection[0] == True:\r\n                    intersection = intersection[1]\r\n                    vec = intersection - pol1.points[j]\r\n                    if pol1.fixed_in_space == True and pol2.fixed_in_space == True:\r\n                        continue\r\n                    if pol1.fixed_in_space == False and pol2.fixed_in_space == False:\r\n                        pol2.Translate(-offset_coeff/2.0 * (vec))\r\n                        pol1.Translate(offset_coeff/2.0 * (vec))\r\n                    elif pol1.fixed_in_space == True:\r\n                        pol2.Translate(-offset_coeff * (vec))\r\n                    elif pol2.fixed_in_space == True:\r\n                        pol1.Translate(offset_coeff * (vec))\r\n                    normal = (p2 - p1)\r\n                    normal = np.array((normal[1], -normal[0]))\r\n                    normal = normal / np.linalg.norm(normal)\r\n                    self.ComputeCollisionResponse(pol1, pol2, intersection, normal)\r\n        #SEPARATE AXIS THEOREM\r\n        '''minp1 = min(pol1.points, key=lambda x: x[1])\r\n        minp2 = min(pol2.points, key=lambda x: x[1])\r\n        pol1.points.sort(key=lambda x: SignedAngle(x - minp1))\r\n        pol2.points.sort(key=lambda x: SignedAngle(x - minp2))\r\n        #pol1 axis\r\n        for i in range(len(pol1.points)):\r\n            vec = pol1.points[(i+1)%len(pol1.points)] - pol1.points[i]\r\n            vec = np.array(vec[1], vec[0])\r\n            max1 = 0\r\n            min1 = 0\r\n\r\n            max2 = np.dot((pol2.points[0] - pol1.points[i]), vec)\r\n            min2 = np.dot((pol2.points[0] - pol1.points[i]), vec)\r\n            for a in range(len(pol1.points)):\r\n                if np.dot((pol1.points[a] - pol1.points[i]), vec)<min1:\r\n                    min1 = np.dot((pol1.points[a] - pol1.points[i]), vec)\r\n            for b in range(len(pol2.points)):\r\n                if np.dot((pol2.points[b] - pol1.points[i]), vec) < min2:\r\n                    min2 = np.dot((pol2.points[b] - pol1.points[i]), vec)\r\n                if np.dot((pol2.points[b] - pol1.points[i]), vec)>max2:\r\n                    min1 = np.dot((pol2.points[b] - pol1.points[i]), vec)\r\n\r\n            if max1 > max2 and min1 > max2:\r\n                pass'''\r\n\r\n\r\n    def ComputeCollisionResponse(self, p1 : ConvexPolygon, p2 : ConvexPolygon, intersection, normal):\r\n        e = 1.0\r\n        ap = intersection - p1.center_of_mass\r\n        bp = intersection - p2.center_of_mass\r\n        v_ab = (p1.velocity + p1.rotational_velocity * np.array((-ap[1], ap[0]))) - (p2.velocity + p2.rotational_velocity * np.array((-bp[1], bp[0])))\r\n        j = -(1.0 + e) * np.dot(v_ab, normal)\r\n        inverse_masses = 1.0 / (p1.mass_per_area * p1.area) + 1.0 / (p2.mass_per_area * p2.area)\r\n        if p1.fixed_in_space == True:\r\n            inverse_masses = 1.0 / (p2.mass_per_area * p2.area)\r\n            j = j / (inverse_masses + (np.dot(np.array((-bp[1], bp[0])), normal)**2 / p2.rotational_inertia))\r\n            p2.velocity = p2.velocity - normal * j / (p2.mass_per_area * p2.area)\r\n            p2.rotational_velocity = p2.rotational_velocity - np.dot(np.array((-bp[1], bp[0])), normal) * j / p2.rotational_inertia\r\n        elif p2.fixed_in_space == True:\r\n            inverse_masses = 1.0 / (p1.mass_per_area * p1.area)\r\n            j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal)**2 / p1.rotational_inertia))\r\n            p1.velocity = p1.velocity + normal * j / (p1.mass_per_area * p1.area)\r\n            p1.rotational_velocity = p1.rotational_velocity + np.dot(np.array((-ap[1], ap[0])), normal) * j / p1.rotational_inertia\r\n        else:\r\n            j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal)**2 / p1.rotational_inertia) + (np.dot(np.array((-bp[1], bp[0])), normal)**2 / p2.rotational_inertia))\r\n            p1.velocity = p1.velocity + normal * j / (p1.mass_per_area * p1.area)\r\n            p2.velocity = p2.velocity - normal * j / (p2.mass_per_area * p2.area)\r\n\r\n            p1.rotational_velocity = p1.rotational_velocity + np.dot(np.array((-ap[1], ap[0])), normal) * j / p1.rotational_inertia\r\n            p2.rotational_velocity = p2.rotational_velocity - np.dot(np.array((-bp[1], bp[0])), normal) * j / p2.rotational_inertia\r\n\r\n    def FindAndSolveCollisionBetweenBallAndPolygon(self, ball : Ball, polygon : ConvexPolygon):\r\n        collision = np.array((0, 0))\r\n        normal = np.array((0, 0))\r\n        for i in range(len(polygon.points)):\r\n            A = polygon.points[i]\r\n            B = polygon.points[(i+1)%len(polygon.points)]\r\n            C = ball.position\r\n            xA = polygon.points[i][0]\r\n            yA = polygon.points[i][1]\r\n\r\n            xB = polygon.points[(i+1)%len(polygon.points)][0]\r\n            yB = polygon.points[(i+1)%len(polygon.points)][1]\r\n\r\n            xC = ball.position[0]\r\n            yC = ball.position[1]\r\n            D = (np.abs((xB-xA)*(yC-yA) - (yB-yA)*(xC-xA)))/np.sqrt((xB-xA)**2 + (yB-yA)**2)\r\n            if np.dot(A-B, C-B)>0 and np.dot(B-A, C - A)>0:\r\n                if D<ball.radius:\r\n                    coeff = ((xB-xA)*(xC-xA) + (yB-yA)*(yC-yA))/((xB-xA)**2 + (yB-yA)**2)\r\n                    collision[0] = xA + (xB-xA) * coeff\r\n                    collision[1] = yA + (yB - yA) * coeff\r\n                    normal = (ball.position-collision)\r\n                    normal = normal/np.linalg.norm(normal)\r\n                    ball.position = ball.position + normal*(ball.radius-D)*3\r\n                    return True, collision, normal\r\n        for i in range(len(polygon.points)):\r\n            A = polygon.points[i]\r\n            B = polygon.points[(i + 1) % len(polygon.points)]\r\n            C = ball.position\r\n            xA = polygon.points[i][0]\r\n            yA = polygon.points[i][1]\r\n\r\n            xB = polygon.points[(i + 1) % len(polygon.points)][0]\r\n            yB = polygon.points[(i + 1) % len(polygon.points)][1]\r\n\r\n            xC = ball.position[0]\r\n            yC = ball.position[1]\r\n            D = (np.abs((xB - xA) * (yC - yA) - (yB - yA) * (xC - xA))) / np.sqrt((xB - xA) ** 2 + (yB - yA) ** 2)\r\n            if not(np.dot(A-B, C-B)>0 and np.dot(B-A, C - A)>0):\r\n                D = min(np.linalg.norm(A-C), np.linalg.norm(B-C))\r\n                if D<ball.radius:\r\n                    if D==np.linalg.norm(A-C):\r\n                        collision = A\r\n                    else:\r\n                        collision = B\r\n                    normal = (ball.position-collision)\r\n                    normal = normal/np.linalg.norm(normal)\r\n                    ball.position = ball.position + normal*(ball.radius-np.linalg.norm(ball.position-collision))*3\r\n                    return True, collision, normal\r\n        return False, collision, normal\r\n\r\n    def ComputeCollisionResponseBetweenBallAndPolygon(self, ball : Ball, polygon : ConvexPolygon, collision : np.array, normal : np.array):\r\n        e = 0.9\r\n        ap = collision - ball.position\r\n        bp = collision - polygon.center_of_mass\r\n        v_ab = (ball.velocity + ball.rotational_velocity * np.array((-ap[1], ap[0]))) - (\r\n                polygon.velocity + polygon.rotational_velocity * np.array((-bp[1], bp[0])) )\r\n        j = -(1.0 + e) * np.dot(v_ab, normal)\r\n        inverse_masses = 1.0 / (ball.mass_per_area * ball.area) + 1.0 / (polygon.mass_per_area * polygon.area)\r\n        if ball.fixed_in_space == True:\r\n            inverse_masses = 1.0 / (polygon.mass_per_area * polygon.area)\r\n            j = j / (inverse_masses + (np.dot(np.array((-bp[1], bp[0])), normal) ** 2 / polygon.rotational_inertia))\r\n            polygon.velocity = polygon.velocity - normal * j / (polygon.mass_per_area * polygon.area)\r\n            polygon.rotational_velocity = polygon.rotational_velocity - np.dot(np.array((-bp[1], bp[0])),\r\n                                                                               normal) * j / polygon.rotational_inertia\r\n        elif polygon.fixed_in_space == True:\r\n            inverse_masses = 1.0 / (ball.mass_per_area * ball.area)\r\n            j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal) ** 2 / ball.rotational_inertia))\r\n            ball.velocity = ball.velocity + normal * j / (ball.mass_per_area * ball.area)\r\n            ball.rotational_velocity = ball.rotational_velocity + np.dot(np.array((-ap[1], ap[0])),\r\n                                                                         normal) * j / ball.rotational_inertia\r\n        else:\r\n            j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal) ** 2 / ball.rotational_inertia) + (\r\n                    np.dot(np.array((-bp[1], bp[0])), normal) ** 2 / polygon.rotational_inertia))\r\n            ball.velocity = ball.velocity + normal * j / (ball.mass_per_area * ball.area)\r\n            polygon.velocity = polygon.velocity - normal * j / (polygon.mass_per_area * polygon.area)\r\n\r\n            ball.rotational_velocity = ball.rotational_velocity + np.dot(np.array((-ap[1], ap[0])),\r\n                                                                         normal) * j / ball.rotational_inertia\r\n            polygon.rotational_velocity = polygon.rotational_velocity - np.dot(np.array((-bp[1], bp[0])),\r\n                                                                               normal) * j / polygon.rotational_inertia\r\n\r\n\r\n\r\n\r\n\r\n    def Update(self, screen, delta_time):\r\n        for i in range(len(self.convex_polygons)):\r\n            dif = self.convex_polygons[i].center_of_mass\r\n            rot_dif = self.convex_polygons[i].rotation\r\n            for j in range(i+1, len(self.convex_polygons)):\r\n                if np.linalg.norm(self.convex_polygons[i].center_of_mass - self.convex_polygons[j].center_of_mass)<=(self.convex_polygons[i].simple_radius + self.convex_polygons[j].simple_radius):\r\n                    self.FindAndSolvePolygonsCollision(self.convex_polygons[i], self.convex_polygons[j])\r\n            for j in range(len(self.balls)):\r\n                compute = self.FindAndSolveCollisionBetweenBallAndPolygon(self.balls[j], self.convex_polygons[i])\r\n                if compute[0] == True:\r\n                    self.ComputeCollisionResponseBetweenBallAndPolygon(self.balls[j], self.convex_polygons[i], compute[1], compute[2])\r\n        for i in range(len(self.convex_polygons)):\r\n            if self.convex_polygons[i].fixed_in_space == False:\r\n                self.convex_polygons[i].velocity = self.convex_polygons[i].velocity + np.array((0, 9.81*20))*delta_time\r\n                self.convex_polygons[i].velocity*=(0.999)\r\n                self.convex_polygons[i].Translate(self.convex_polygons[i].velocity*delta_time)\r\n            if self.convex_polygons[i].fixed_rotation == False:\r\n                self.convex_polygons[i].Rotate(self.convex_polygons[i].rotational_velocity*delta_time)\r\n                self.convex_polygons[i].rotational_velocity *= (0.999)\r\n\r\n\r\n            self.convex_polygons[i].DisplayPoints(screen)\r\n        for i in range(len(self.balls)):\r\n            self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time\r\n            self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time\r\n            self.balls[i].velocity *= (0.999)\r\n            self.balls[i].Display(screen)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Physics2D.py b/Physics2D.py
+--- a/Physics2D.py	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/Physics2D.py	(date 1716071368856)
+@@ -49,7 +49,7 @@
+         return False, np.array((0, 0))
+ 
+ class ConvexPolygon:
+-    def __init__(self, *points, fixed = False, fixed_rotation = False, move_center_of_mass = (0, 0)):
++    def __init__(self, *points, fixed = False, fixed_rotation = False, move_center_of_mass = (0, 0), mass_per_area = 1.0):
+         self.fixed_in_space = fixed
+         self.fixed_rotation = fixed_rotation
+         self.points = list(points)
+@@ -73,7 +73,7 @@
+ 
+         self.true_position = self.center_of_mass
+ 
+-        self.mass_per_area = 1
++        self.mass_per_area = mass_per_area
+         self.rotational_inertia = 0
+ 
+         self.SetRotationalInertia()
+@@ -399,14 +399,16 @@
+                                                                                normal) * j / polygon.rotational_inertia
+ 
+ 
+-
++    def clear(self):
++        self.convex_polygons.clear()
++        self.balls.clear()
+ 
+ 
+     def Update(self, screen, delta_time):
+         for i in range(len(self.convex_polygons)):
+-            dif = self.convex_polygons[i].center_of_mass
+-            rot_dif = self.convex_polygons[i].rotation
+             for j in range(i+1, len(self.convex_polygons)):
++                if i == j:
++                    continue
+                 if np.linalg.norm(self.convex_polygons[i].center_of_mass - self.convex_polygons[j].center_of_mass)<=(self.convex_polygons[i].simple_radius + self.convex_polygons[j].simple_radius):
+                     self.FindAndSolvePolygonsCollision(self.convex_polygons[i], self.convex_polygons[j])
+             for j in range(len(self.balls)):
+@@ -423,9 +425,10 @@
+                 self.convex_polygons[i].rotational_velocity *= (0.999)
+ 
+ 
+-            self.convex_polygons[i].DisplayPoints(screen)
++            #self.convex_polygons[i].DisplayPoints(screen)
+         for i in range(len(self.balls)):
+-            self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time
+-            self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time
+-            self.balls[i].velocity *= (0.999)
+-            self.balls[i].Display(screen)
++            if not self.balls[i].fixed_in_space:
++                self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time
++                self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time
++                self.balls[i].velocity *= (0.999)
++            #self.balls[i].Display(screen)
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"ee09324a-3735-4b83-9393-d9bb5f877e71\" name=\"Changes\" comment=\"\">\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/Game.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Game.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/LevelData.txt\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/LevelData.txt\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/LevelLoader.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/LevelLoader.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/PlacementFunctions.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/PlacementFunctions.py\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_BRANCH_BY_REPOSITORY\">\r\n      <map>\r\n        <entry key=\"$PROJECT_DIR$\" value=\"main\" />\r\n      </map>\r\n    </option>\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"MarkdownSettingsMigration\">\r\n    <option name=\"stateVersion\" value=\"1\" />\r\n  </component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;customColor&quot;: &quot;&quot;,\r\n  &quot;associatedIndex&quot;: 5\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"2gYYvoY9bTyM0GPqVQPPfr9l3wA\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n    <option name=\"showMembers\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">{\r\n  &quot;keyToString&quot;: {\r\n    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\r\n    &quot;git-widget-placeholder&quot;: &quot;Game&quot;,\r\n    &quot;last_opened_file_path&quot;: &quot;C:/Users/Sidne/OneDrive/Bureau/Flipp-n-Disco&quot;\r\n  }\r\n}</component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\Sidne\\OneDrive\\Bureau\\Flipp-n-Disco\" />\r\n      <recent name=\"C:\\Users\\Sidne\\OneDrive\\Bureau\\Flipp-n-Disco\\textures\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"RunManager\">\r\n    <configuration name=\"Game\" type=\"PythonConfigurationType\" factoryName=\"Python\" nameIsGenerated=\"true\">\r\n      <module name=\"Flipp-n-Disco\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <envs>\r\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\r\n      </envs>\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"SDK_NAME\" value=\"Python 3.11\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"false\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/Game.py\" />\r\n      <option name=\"PARAMETERS\" value=\"\" />\r\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\r\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\r\n      <option name=\"MODULE_MODE\" value=\"false\" />\r\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\r\n      <option name=\"INPUT_FILE\" value=\"\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"ee09324a-3735-4b83-9393-d9bb5f877e71\" name=\"Changes\" comment=\"\" />\r\n      <created>1715876212274</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1715876212274</updated>\r\n    </task>\r\n    <servers />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/.idea/workspace.xml	(date 1716072109278)
+@@ -4,68 +4,197 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="">
++    <list default="true" id="362d4674-e4d1-4965-8f86-5a149d3f0619" name="Changes" comment="Improved menu scroller">
++      <change afterPath="$PROJECT_DIR$/textures/loadbutton.png" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/textures/savebutton.png" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/Ball.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ball.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LevelData.txt" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/Physics2D.py" beforeDir="false" afterPath="$PROJECT_DIR$/Physics2D.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+     <option name="LAST_RESOLUTION" value="IGNORE" />
++  </component>
++  <component name="FileTemplateManagerImpl">
++    <option name="RECENT_TEMPLATES">
++      <list>
++        <option value="Python Script" />
++      </list>
++    </option>
+   </component>
+   <component name="Git.Settings">
++    <favorite-branches>
++      <branch-storage>
++        <map>
++          <entry type="LOCAL">
++            <value>
++              <list>
++                <branch-info repo="$PROJECT_DIR$" source="menu" />
++              </list>
++            </value>
++          </entry>
++        </map>
++      </branch-storage>
++    </favorite-branches>
+     <option name="RECENT_BRANCH_BY_REPOSITORY">
+       <map>
+         <entry key="$PROJECT_DIR$" value="main" />
+       </map>
+     </option>
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
++  </component>
++  <component name="GitHubPullRequestSearchHistory">{
++  &quot;lastFilter&quot;: {
++    &quot;state&quot;: &quot;OPEN&quot;,
++    &quot;assignee&quot;: &quot;Andromiel&quot;
++  }
++}</component>
++  <component name="GithubPullRequestsUISettings">
++    <option name="selectedUrlAndAccountId">
++      <UrlAndAccount>
++        <option name="accountId" value="f1e92cc1-b61b-4206-ad30-466022078c33" />
++        <option name="url" value="https://github.com/Andromiel/Flipp-n-Disco.git" />
++      </UrlAndAccount>
++    </option>
+   </component>
+   <component name="MarkdownSettingsMigration">
+     <option name="stateVersion" value="1" />
+   </component>
+   <component name="ProjectColorInfo">{
+-  &quot;customColor&quot;: &quot;&quot;,
+-  &quot;associatedIndex&quot;: 5
++  &quot;associatedIndex&quot;: 1
+ }</component>
+-  <component name="ProjectId" id="2gYYvoY9bTyM0GPqVQPPfr9l3wA" />
++  <component name="ProjectId" id="2bwW1fmsxMyjDqms6077oN9et5P" />
++  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
++    <ConfirmationsSetting value="2" id="Add" />
++  </component>
+   <component name="ProjectViewState">
+     <option name="hideEmptyMiddlePackages" value="true" />
+     <option name="showLibraryContents" value="true" />
+-    <option name="showMembers" value="true" />
+   </component>
+-  <component name="PropertiesComponent">{
+-  &quot;keyToString&quot;: {
+-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+-    &quot;git-widget-placeholder&quot;: &quot;Game&quot;,
+-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Sidne/OneDrive/Bureau/Flipp-n-Disco&quot;
++  <component name="PropertiesComponent"><![CDATA[{
++  "keyToString": {
++    "ASKED_ADD_EXTERNAL_FILES": "true",
++    "RunOnceActivity.OpenProjectViewOnStart": "true",
++    "RunOnceActivity.ShowReadmeOnStart": "true",
++    "git-widget-placeholder": "Game",
++    "last_opened_file_path": "C:/Scolarite Efrei/L1/S2/Projet Transverse/Flipper projet transverse",
++    "settings.editor.selected.configurable": "vcs.Git"
++  },
++  "keyToStringList": {
++    "ChangesTree.GroupingKeys": [
++      "directory"
++    ]
+   }
+-}</component>
+-  <component name="RecentsManager">
+-    <key name="CopyFile.RECENT_KEYS">
+-      <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco" />
+-      <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\textures" />
+-    </key>
+-  </component>
+-  <component name="RunManager">
+-    <configuration name="Game" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+-      <module name="Flipp-n-Disco" />
++}]]></component>
++  <component name="RunManager" selected="Python.Game">
++    <configuration name="FlipperEngine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
++      <module name="Ebauche flipper" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/FlipperEngine.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <configuration name="Game" type="PythonConfigurationType" factoryName="Python">
++      <module name="Flipper projet transverse" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="SDK_NAME" value="Python 3.10" />
++      <option name="WORKING_DIRECTORY" value="" />
++      <option name="IS_MODULE_SDK" value="false" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="SCRIPT_NAME" value="Game.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <configuration name="Test" type="PythonConfigurationType" factoryName="Python">
++      <module name="Ebauche flipper" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="SDK_NAME" value="Python 3.10" />
++      <option name="WORKING_DIRECTORY" value="" />
++      <option name="IS_MODULE_SDK" value="false" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="SCRIPT_NAME" value="Test.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <configuration name="main" type="PythonConfigurationType" factoryName="Python">
++      <module name="Ebauche flipper" />
+       <option name="INTERPRETER_OPTIONS" value="" />
+       <option name="PARENT_ENVS" value="true" />
+       <envs>
+         <env name="PYTHONUNBUFFERED" value="1" />
+       </envs>
+       <option name="SDK_HOME" value="" />
+-      <option name="SDK_NAME" value="Python 3.11" />
++      <option name="SDK_NAME" value="Python 3.10" />
++      <option name="WORKING_DIRECTORY" value="" />
++      <option name="IS_MODULE_SDK" value="false" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="SCRIPT_NAME" value="main.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <configuration name="menu" type="PythonConfigurationType" factoryName="Python">
++      <module name="Ebauche flipper" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="SDK_NAME" value="Python 3.10" />
+       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+       <option name="IS_MODULE_SDK" value="false" />
+       <option name="ADD_CONTENT_ROOTS" value="true" />
+       <option name="ADD_SOURCE_ROOTS" value="true" />
+-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Game.py" />
++      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/menu.py" />
+       <option name="PARAMETERS" value="" />
+       <option name="SHOW_COMMAND_LINE" value="false" />
+       <option name="EMULATE_TERMINAL" value="false" />
+@@ -74,16 +203,189 @@
+       <option name="INPUT_FILE" value="" />
+       <method v="2" />
+     </configuration>
++    <list>
++      <item itemvalue="Python.menu" />
++      <item itemvalue="Python.Game" />
++      <item itemvalue="Python.main" />
++      <item itemvalue="Python.Test" />
++      <item itemvalue="Python.FlipperEngine" />
++    </list>
++    <recent_temporary>
++      <list>
++        <item itemvalue="Python.FlipperEngine" />
++        <item itemvalue="Python.FlipperEngine" />
++        <item itemvalue="Python.FlipperEngine" />
++        <item itemvalue="Python.FlipperEngine" />
++        <item itemvalue="Python.FlipperEngine" />
++      </list>
++    </recent_temporary>
+   </component>
+   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+   <component name="TaskManager">
+     <task active="true" id="Default" summary="Default task">
+-      <changelist id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="" />
+-      <created>1715876212274</created>
++      <changelist id="362d4674-e4d1-4965-8f86-5a149d3f0619" name="Changes" comment="" />
++      <created>1707126409979</created>
+       <option name="number" value="Default" />
+       <option name="presentableId" value="Default" />
+-      <updated>1715876212274</updated>
++      <updated>1707126409979</updated>
++    </task>
++    <task id="LOCAL-00001" summary="Initial commit">
++      <option name="closed" value="true" />
++      <created>1708627840889</created>
++      <option name="number" value="00001" />
++      <option name="presentableId" value="LOCAL-00001" />
++      <option name="project" value="LOCAL" />
++      <updated>1708627840889</updated>
++    </task>
++    <task id="LOCAL-00002" summary="Initial commit">
++      <option name="closed" value="true" />
++      <created>1711554137291</created>
++      <option name="number" value="00002" />
++      <option name="presentableId" value="LOCAL-00002" />
++      <option name="project" value="LOCAL" />
++      <updated>1711554137291</updated>
++    </task>
++    <task id="LOCAL-00003" summary="Initial commit">
++      <option name="closed" value="true" />
++      <created>1713724273359</created>
++      <option name="number" value="00003" />
++      <option name="presentableId" value="LOCAL-00003" />
++      <option name="project" value="LOCAL" />
++      <updated>1713724273359</updated>
++    </task>
++    <task id="LOCAL-00004" summary="Added rotation for textures (press directional arrows), removed rotation center offset">
++      <option name="closed" value="true" />
++      <created>1713724517495</created>
++      <option name="number" value="00004" />
++      <option name="presentableId" value="LOCAL-00004" />
++      <option name="project" value="LOCAL" />
++      <updated>1713724517495</updated>
++    </task>
++    <task id="LOCAL-00005" summary="Corrected mouse offset related issues">
++      <option name="closed" value="true" />
++      <created>1713730486663</created>
++      <option name="number" value="00005" />
++      <option name="presentableId" value="LOCAL-00005" />
++      <option name="project" value="LOCAL" />
++      <updated>1713730486663</updated>
++    </task>
++    <task id="LOCAL-00006" summary="Corrected rotation issues">
++      <option name="closed" value="true" />
++      <created>1713972377004</created>
++      <option name="number" value="00006" />
++      <option name="presentableId" value="LOCAL-00006" />
++      <option name="project" value="LOCAL" />
++      <updated>1713972377004</updated>
++    </task>
++    <task id="LOCAL-00007" summary="Don't bother">
++      <option name="closed" value="true" />
++      <created>1715553426102</created>
++      <option name="number" value="00007" />
++      <option name="presentableId" value="LOCAL-00007" />
++      <option name="project" value="LOCAL" />
++      <updated>1715553426102</updated>
++    </task>
++    <task id="LOCAL-00008" summary="Added menu, levels map, multiple selection, copy pasting, fading effects">
++      <option name="closed" value="true" />
++      <created>1715866653705</created>
++      <option name="number" value="00008" />
++      <option name="presentableId" value="LOCAL-00008" />
++      <option name="project" value="LOCAL" />
++      <updated>1715866653705</updated>
++    </task>
++    <task id="LOCAL-00009" summary="Just textures">
++      <option name="closed" value="true" />
++      <created>1715866716345</created>
++      <option name="number" value="00009" />
++      <option name="presentableId" value="LOCAL-00009" />
++      <option name="project" value="LOCAL" />
++      <updated>1715866716345</updated>
+     </task>
++    <task id="LOCAL-00010" summary="Just textures again">
++      <option name="closed" value="true" />
++      <created>1715871543345</created>
++      <option name="number" value="00010" />
++      <option name="presentableId" value="LOCAL-00010" />
++      <option name="project" value="LOCAL" />
++      <updated>1715871543346</updated>
++    </task>
++    <task id="LOCAL-00011" summary="Flip images">
++      <option name="closed" value="true" />
++      <created>1715876010163</created>
++      <option name="number" value="00011" />
++      <option name="presentableId" value="LOCAL-00011" />
++      <option name="project" value="LOCAL" />
++      <updated>1715876010163</updated>
++    </task>
++    <task id="LOCAL-00012" summary="Scroller completed">
++      <option name="closed" value="true" />
++      <created>1715939432762</created>
++      <option name="number" value="00012" />
++      <option name="presentableId" value="LOCAL-00012" />
++      <option name="project" value="LOCAL" />
++      <updated>1715939432763</updated>
++    </task>
++    <task id="LOCAL-00013" summary="make pussh possible">
++      <option name="closed" value="true" />
++      <created>1715939492151</created>
++      <option name="number" value="00013" />
++      <option name="presentableId" value="LOCAL-00013" />
++      <option name="project" value="LOCAL" />
++      <updated>1715939492151</updated>
++    </task>
++    <task id="LOCAL-00014" summary="Improved menu scroller">
++      <option name="closed" value="true" />
++      <created>1716047786347</created>
++      <option name="number" value="00014" />
++      <option name="presentableId" value="LOCAL-00014" />
++      <option name="project" value="LOCAL" />
++      <updated>1716047786347</updated>
++    </task>
++    <option name="localTasksCounter" value="15" />
+     <servers />
+   </component>
++  <component name="Vcs.Log.Tabs.Properties">
++    <option name="TAB_STATES">
++      <map>
++        <entry key="MAIN">
++          <value>
++            <State>
++              <option name="CUSTOM_BOOLEAN_PROPERTIES">
++                <map>
++                  <entry key="Show.Git.Branches" value="true" />
++                </map>
++              </option>
++              <option name="FILTERS">
++                <map>
++                  <entry key="branch">
++                    <value>
++                      <list>
++                        <option value="main" />
++                      </list>
++                    </value>
++                  </entry>
++                </map>
++              </option>
++            </State>
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
++  <component name="VcsManagerConfiguration">
++    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
++    <MESSAGE value="Initial commit" />
++    <MESSAGE value="Added rotation for textures (press directional arrows), removed rotation center offset" />
++    <MESSAGE value="Corrected mouse offset related issues" />
++    <MESSAGE value="Corrected rotation issues" />
++    <MESSAGE value="Don't bother" />
++    <MESSAGE value="Added menu, levels map, multiple selection, copy pasting, fading effects" />
++    <MESSAGE value="Just textures" />
++    <MESSAGE value="Just textures again" />
++    <MESSAGE value="Flip images" />
++    <MESSAGE value="Scroller completed" />
++    <MESSAGE value="make pussh possible" />
++    <MESSAGE value="Improved menu scroller" />
++    <option name="LAST_COMMIT_MESSAGE" value="Improved menu scroller" />
++  </component>
+ </project>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"Black\">\r\n    <option name=\"sdkName\" value=\"Python 3.11\" />\r\n  </component>\r\n  <component name=\"ProjectRootManager\" version=\"2\" project-jdk-name=\"Python 3.11\" project-jdk-type=\"Python SDK\" />\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision e04dcaee468fb35e74cb78af8006c476e2396b2a)
++++ b/.idea/misc.xml	(date 1716048364724)
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="Black">
+-    <option name="sdkName" value="Python 3.11" />
++    <option name="sdkName" value="Python 3.10" />
+   </component>
+-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11" project-jdk-type="Python SDK" />
++  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10" project-jdk-type="Python SDK" />
+ </project>
+\ No newline at end of file

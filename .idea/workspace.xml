@@ -4,18 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Improved menu scroller">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Merged and improved level saver/loader, and instruction size">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Ball.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ball.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LevelData.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Physics2D.py" beforeDir="false" afterPath="$PROJECT_DIR$/Physics2D.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/textures/loadbutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/loadbutton.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/textures/savebutton.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/savebutton.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,10 +94,20 @@
       <option name="presentableId" value="Default" />
       <updated>1715876212274</updated>
     </task>
+    <task id="LOCAL-00001" summary="Merged and improved level saver/loader, and instruction size">
+      <option name="closed" value="true" />
+      <created>1716123445846</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1716123445846</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Improved menu scroller" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved menu scroller" />
+    <MESSAGE value="Merged and improved level saver/loader, and instruction size" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merged and improved level saver/loader, and instruction size" />
   </component>
 </project>

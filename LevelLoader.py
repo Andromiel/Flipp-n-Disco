@@ -25,7 +25,8 @@ def ReadContent(filename):
         rotation_pos = attributes[3].split(",")
         rotation_pos = (int(float(rotation_pos[0])), int(float(rotation_pos[1])))
         component_type = int(attributes[5])
-        object = GameComponent(skin, skin_name, pos[0], pos[1], rotation_pos, 0, component_type)
+        flipped = bool(attributes[6])
+        object = GameComponent(skin, skin_name, pos[0], pos[1], rotation_pos, 0, component_type, flipped=flipped)
         center = object.rect.center
         object.resize(60 / object.rect.size[0])
         object.move_at(center)
@@ -45,9 +46,11 @@ def SaveContent(list_game_object, filename):
         level_data.write(';'+str(object.rotationcenter[0])+','+str(object.rotationcenter[1]))
         level_data.write(';'+str(object.angle))
         level_data.write(';' + str(object.component_type))
+        level_data.write(';' + str(int(object.flipped)))
         level_data.write('\n')
     level_data.close()
 
+'''
 def DefaultContent(filename):
     level_data = open(filename, "w")
     for i in range(5):
@@ -58,3 +61,4 @@ def DefaultContent(filename):
         level_data.write(';0\n')
 
     level_data.close()
+'''

@@ -10,11 +10,12 @@ NO_TYPE = 0
 BUMPER_TYPE = 1
 FLIPPER_TYPE = 2
 WALL_TYPE = 3
+CANON_TYPE = 4
 from Physics2D import PhysicsEngine, ConvexPolygon
 from Ball import Ball
 
 class MapObject:
-    def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0):
+    def __init__(self, img, imgname, posx=0, posy=0, size=(20,20), show_rotating_point = False, angle=0, flipped = False):
         self.size = 1
         self.imgname = imgname
         self.img = img
@@ -36,6 +37,7 @@ class MapObject:
         self.move_at((posx, posy))
 
         self.flipped = False
+        self.flip_x_axis(flipped)
 
         self.type = NO_TYPE
     def display(self, surface):
@@ -79,7 +81,7 @@ class MapObject:
         self.rect = rotated_img.get_rect(center=new_center)
         self.img = rotated_img
         if self.flipped:
-            self.img = pygame.transform.flip(self.img, False, True)
+            self.img = pygame.transform.flip(self.img, True, False)
         self.mask = pygame.mask.from_surface(self.img)
         self.originaloffset = self.originaloffset.rotate(-angle)
 
@@ -94,7 +96,7 @@ class MapObject:
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
         if self.flipped:
-            self.img = pygame.transform.flip(self.img, False, True)
+            self.img = pygame.transform.flip(self.img, True, False)
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
@@ -105,7 +107,7 @@ class MapObject:
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.img = pygame.transform.rotate(self.scaled_img, self.angle)
         if self.flipped:
-            self.img = pygame.transform.flip(self.img, False, True)
+            self.img = pygame.transform.flip(self.img, True, False)
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
@@ -113,9 +115,20 @@ class MapObject:
         self.reposition = option
         if option == REPOS_OBJECT:
             self.mouseoffset = (pygame.Vector2(self.rect.center) - pygame.Vector2(pygame.mouse.get_pos()))
-    def flip_x_axis(self):
-        self.flipped = True
-        self.img = pygame.transform.flip(self.img, False, True)
+    def flip_x_axis(self, flip = None):
+        if flip == None:
+            self.flipped = not self.flipped
+            self.img = pygame.transform.flip(self.img, True, False)
+            self.mask = pygame.mask.from_surface(self.img)
+            center = self.rect.center
+            self.rect = self.img.get_rect()
+            self.rect.center = center
+        else:
+            if flip == self.flipped:
+                pass
+            else:
+                self.flip_x_axis()
+                self.flipped = flip
     def update(self, surface):
         mouse_pos = pygame.mouse.get_pos()
 
@@ -128,8 +141,8 @@ class MapObject:
             self.rescale(surface, self.shadow_type)
         self.display(surface)
 class GameComponent(MapObject):
-    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None, object_type = NO_TYPE, size = (20, 20)):
-        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True, size = size)
+    def __init__(self, img = None, imgname = None, posx=0, posy=0, rotationcenter=None, angle=None, object_type = NO_TYPE, size = (20, 20), flipped = False):
+        MapObject.__init__(self, img, imgname, posx, posy, show_rotating_point=True, size = size, flipped = flipped)
         self.physics_engineID = [-1, -1]#type, index
         self.component_type = object_type
         self.shadow_type = object_type

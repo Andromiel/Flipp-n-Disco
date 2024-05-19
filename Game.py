@@ -30,10 +30,12 @@ screen = pygame.display.set_mode((WIDTH,HEIGHT))
 button_name = "textures/plus sign.png"
 save_button_name = "textures/savebutton.png"
 load_button_name = "textures/loadbutton.png"
+help_button_name = "textures/helpbutton.png"
+
 flipper_name = "textures/flipper.png"
 bumper_name = "textures/bumper1.png"
 wall_name = "textures/wall.png"
-help_button_name = "textures/helpbutton.png"
+canon_name = "textures/canon.png"
 
 instructions_tex = pygame.image.load("textures/instructions.png")
 instructions_tex = pygame.transform.smoothscale(instructions_tex, (WIDTH, WIDTH * instructions_tex.get_height()/instructions_tex.get_width()))
@@ -41,6 +43,8 @@ button_tex = pygame.image.load(button_name)
 flipper_tex = pygame.image.load(flipper_name)
 bumper_tex = pygame.image.load(bumper_name)
 wall_tex = pygame.image.load(wall_name)
+canon_tex = pygame.image.load(canon_name)
+
 save_button_tex = pygame.image.load(save_button_name)
 load_button_tex = pygame.image.load(load_button_name)
 help_button_tex = pygame.image.load(help_button_name)
@@ -61,6 +65,7 @@ directory = "textures/levels_numbers"
 levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
 custom_levels = ["Default_Level"]
+
 from PlacementFunctions import GameComponent
 from PlacementFunctions import PhysicsEngine
 engine = PhysicsEngine()
@@ -82,7 +87,7 @@ transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
 
 game = Game(screen)
-game.GameState = RUN_LEVEL
+game.GameState = LEVEL_EDITOR
 
 loop = True
 clock = pygame.time.Clock()
@@ -187,12 +192,10 @@ while loop:
         load_button = MapObject(pygame.transform.smoothscale(load_button_tex, (120, 120*load_button_tex.get_height()/load_button_tex.get_width())), load_button_name, WIDTH-70, 140)
         help_button = MapObject(pygame.transform.smoothscale(help_button_tex, (40,40*help_button_tex.get_height()/help_button_tex.get_width())), help_button_name, WIDTH-70, 210)
 
-        flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, 0,0)
-        flipper_choose.move_at((WIDTH/2, HEIGHT/2))
-        bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, 0)
-        bumper_choose.move_at((WIDTH / 2 + 150, HEIGHT / 2))
+        flipper_choose = MapObject(pygame.transform.smoothscale(flipper_tex, (100,100*(flipper_tex.get_height()/flipper_tex.get_width()))), flipper_name, WIDTH/2,HEIGHT/2)
+        bumper_choose = MapObject(pygame.transform.smoothscale(bumper_tex, (60,60)), bumper_name, WIDTH/2+150, HEIGHT/2)
         wall_choose = MapObject(pygame.transform.smoothscale(wall_tex, (60,60 * (wall_tex.get_height()/wall_tex.get_width()))), wall_name, WIDTH/2 - 150,HEIGHT/2)
-        wall_choose.move_at((WIDTH / 2 - 150, HEIGHT / 2))
+        canon_choose = MapObject(pygame.transform.smoothscale(canon_tex, (60, 60 * canon_tex.get_height()/canon_tex.get_width())), canon_name, WIDTH/2, HEIGHT/2 + 150)
 
 
         transparent_background.set_alpha(128)
@@ -229,6 +232,7 @@ while loop:
             FLIPPER = 0
             BUMPER = 1
             WALL = 2
+            CANON = 3
 
             clock.tick(60)
 
@@ -256,6 +260,7 @@ while loop:
                 bumper_choose.update(screen)
                 wall_choose.update(screen)
                 flipper_choose.update(screen)
+                canon_choose.update(screen)
 
                 if bumper_choose.collidesmouse():
                     if pygame.mouse.get_pressed()[0]:
@@ -275,6 +280,12 @@ while loop:
                         chose_object = WALL
                     else:
                         pygame.draw.rect(screen, (0, 255, 0), wall_choose.rect, 3)
+                if canon_choose.collidesmouse():
+                    if pygame.mouse.get_pressed()[0]:
+                        pygame.draw.rect(screen, (255, 0, 0), canon_choose.rect, 3)
+                        chose_object = CANON
+                    else:
+                        pygame.draw.rect(screen, (0, 255, 0), canon_choose.rect, 3)
                 if chose_object!=-1:
                     editing_sate = SHOW_EVERYTHING
                     if chose_object == BUMPER:
@@ -292,7 +303,11 @@ while loop:
                         center = game.GameComponents[-1].rect.center
                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
                         game.GameComponents[-1].move_at(center)
-
+                    if chose_object == CANON:
+                        game.GameComponents.append(GameComponent(canon_tex, canon_name, WIDTH/2, HEIGHT/2, object_type = CANON_TYPE))
+                        center = game.GameComponents[-1].rect.center
+                        game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
+                        game.GameComponents[-1].move_at(center)
             if editing_sate == SHOW_EVERYTHING:
                 add_button.update(screen)
                 load_button.update(screen)
@@ -304,7 +319,6 @@ while loop:
                     shifting = True
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_c]:
                     copied_elements = selected_objects[:]
-                    print("copied")
                 for event in events:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if add_button.collidesmouse():
@@ -322,15 +336,19 @@ while loop:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_v:
                             if pygame.key.get_pressed()[pygame.K_LCTRL]:
+                                selected_objects.clear()
                                 for i in range(len(copied_elements)):
                                     obj = copied_elements[i][0]
-                                    game.GameComponents.append(GameComponent(obj.original_img, obj.imgname, obj.rect.center[0], obj.rect.center[1]))
+                                    game.GameComponents.append(GameComponent(obj.original_img, obj.imgname, obj.rect.center[0], obj.rect.center[1], flipped=obj.flipped))
                                     game.GameComponents[-1].rect.size = obj.original_rect.size
                                     game.GameComponents[-1].scale_to_size(obj.scaled_img.get_rect().size)
                                     game.GameComponents[-1].rotate_around_point(obj.angle)
                                     game.GameComponents[-1].originaloffset = obj.originaloffset
                                     game.GameComponents[-1].rotationcenter = obj.rotationcenter
                                     game.GameComponents[-1].component_type = obj.component_type
+
+                                    selected_objects.append((game.GameComponents[-1], len(game.GameComponents)-1))
+                                selected_object = selected_objects[0]
 
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         if modify_option == REPOS_OBJECT:
@@ -402,11 +420,17 @@ while loop:
                                     object.rotate_around_point(10)
                                 if event.key == pygame.K_DOWN:
                                     object.rotate_around_point(-10)
-                                if event.key == pygame.K_DELETE:
-                                    game.GameComponents.pop(index)
-                                    selected_objects.pop(i)
-                                    i=i-1
-                                    selected_object = None, None
+                    for event in events:
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_DELETE:
+                                temp_components = []
+                                selected_objects_indexes = [selected_objects[i][1] for i in range(len(selected_objects))]
+                                for i in range(len(game.GameComponents)):
+                                    if selected_objects_indexes.count(i)==0:
+                                        temp_components.append(game.GameComponents[i])
+                                game.GameComponents = temp_components
+                                selected_object = None, None
+                                selected_objects.clear()
 
             if editing_sate == INSTRUCTIONS:
                 screen.fill((112, 48, 160))
