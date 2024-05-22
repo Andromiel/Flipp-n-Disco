@@ -87,7 +87,7 @@ transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
 
 game = Game(screen)
-game.GameState = LEVEL_EDITOR
+game.GameState = RUN_LEVEL
 
 loop = True
 clock = pygame.time.Clock()
@@ -534,6 +534,7 @@ while loop:
         engine.clear()
         for component in game.GameComponents:
             component.connect_with_physics_engine(engine)
+        engine.balls.append(Ball(WIDTH/2-100, HEIGHT/2, 30, 1.0, False))
         while game.GameState == RUN_LEVEL:
             clock.tick(60)
             screen.fill((0, 120, 35))
@@ -548,15 +549,60 @@ while loop:
                         game.GameState = MENU
             engine.Update(screen, 1.0/60.0)
             game.ShowComponents()
+            for component in game.GameComponents:
+                component.adjust_to_physics(engine)
             for polygon in engine.convex_polygons:
                 for point in polygon.points:
                     pygame.draw.circle(screen, (255, 0, 0), point, 3)
+
+            #engine.convex_polygons[game.GameComponents[0].physics_engineID[1]].Rotate(-10 * 1/60, pygame.Vector2(game.GameComponents[0].rotationcenter))
+
+            for component in game.GameComponents:
+                if component.component_type == FLIPPER_TYPE:
+                    angle = engine.convex_polygons[component.physics_engineID[1]].rotation
+                    coeff = pi / 180
+                    angle_in_degrees = angle / coeff
+                    if pygame.key.get_pressed()[pygame.K_SPACE]:
+                        if component.flipped == True:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(10 * 1 / 60, pygame.Vector2(component.rotationcenter))
+                        else:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-10 * 1 / 60, pygame.Vector2(
+                                component.rotationcenter))
+                    else:
+                        if component.flipped == True:
+                            if angle>0:
+                                engine.convex_polygons[component.physics_engineID[1]].Rotate(-10 * 1 / 60, pygame.Vector2(
+                                component.rotationcenter))
+
+                        else:
+                            if angle<0:
+                                engine.convex_polygons[component.physics_engineID[1]].Rotate(10 * 1 / 60, pygame.Vector2(
+                                component.rotationcenter))
+
+                    angle = engine.convex_polygons[component.physics_engineID[1]].rotation
+                    coeff = pi / 180
+                    angle_in_degrees = angle / coeff
+                    if component.flipped == True:
+                        print("flipped : ", angle)
+                        if angle_in_degrees<0:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-angle, pygame.Vector2(component.rotationcenter))
+                        elif angle_in_degrees>90:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-angle + pi/2, pygame.Vector2(component.rotationcenter))
+                    else:
+                        print("not flipped : ", angle)
+                        if angle_in_degrees>0:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-angle, pygame.Vector2(component.rotationcenter))
+                        elif angle_in_degrees<-90:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-angle - pi/2, pygame.Vector2(component.rotationcenter))
+
+
+            #engine.convex_polygons[0].Rotate(0.1)
             for ball in engine.balls:
                 pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
+            engine.balls[-1].Display(screen)
             pygame.display.update()
 
     if game.GameState == MY_LEVELS:
-
         menu_data = GenerateMenu(custom_levels, screen)
         menu_rect, scrollerbar_rect, scroller_rect, text_surfaces, text_rects, font = menu_data
         selected_level = [False, None]
