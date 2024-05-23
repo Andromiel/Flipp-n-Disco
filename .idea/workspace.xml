@@ -5,17 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Added canon to options">
-      <change afterPath="$PROJECT_DIR$/Sounds/music_level1_MJ.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Sounds/music_level2_BS.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Sounds/music_level3_CD.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Sounds/music_level_editor_creep.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/custom_levels/Default_Level.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Default_Level.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/custom_levels/LevelData.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

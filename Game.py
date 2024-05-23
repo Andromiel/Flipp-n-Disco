@@ -45,6 +45,7 @@ save_button_name = "textures/savebutton.png"
 load_button_name = "textures/loadbutton.png"
 help_button_name = "textures/helpbutton.png"
 
+ball_name = "textures/ball.png"
 flipper_name = "textures/flipper.png"
 bumper_name = "textures/bumper1.png"
 wall_name = "textures/wall.png"
@@ -53,6 +54,7 @@ canon_name = "textures/canon.png"
 instructions_tex = pygame.image.load("textures/instructions.png")
 instructions_tex = pygame.transform.smoothscale(instructions_tex, (
     WIDTH, WIDTH * instructions_tex.get_height() / instructions_tex.get_width()))
+ball_tex = pygame.transform.smoothscale(pygame.image.load(ball_name), (50,50))
 button_tex = pygame.image.load(button_name)
 flipper_tex = pygame.image.load(flipper_name)
 bumper_tex = pygame.image.load(bumper_name)
@@ -91,18 +93,23 @@ class Game:
         self.GameComponents = []
         self.screen = screen
         self.GameState = MENU
+        self.lives = 3
 
     def ShowComponents(self):
         for i in range(len(self.GameComponents)):
             if self.GameComponents[i].img != None:
                 self.GameComponents[i].update(self.screen)
 
+    def DisplayLives(self):
+        for i in range(self.lives):
+            screen.blit(ball_tex, (10+60*i, 10))
 
 transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
 
 game = Game(screen)
 game.GameState = MENU
+game.GameComponents = ReadContent("custom_levels/level1.txt")
 
 loop = True
 clock = pygame.time.Clock()
@@ -641,6 +648,7 @@ while loop:
                         game.GameState = MENU
             engine.Update(screen, 1.0 / 60.0)
             game.ShowComponents()
+
             for component in game.GameComponents:
                 component.adjust_to_physics(engine)
             for polygon in engine.convex_polygons:
@@ -697,7 +705,10 @@ while loop:
             # engine.convex_polygons[0].Rotate(0.1)
             for ball in engine.balls:
                 pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
-            engine.balls[-1].Display(screen)
+
+            if engine.balls:
+                engine.balls[-1].Display(screen)
+            game.DisplayLives()
             pygame.display.update()
 
     if game.GameState == MY_LEVELS:
