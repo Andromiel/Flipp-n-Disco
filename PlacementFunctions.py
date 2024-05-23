@@ -81,13 +81,13 @@ class MapObject:
         if self.flipped == True:
 
             self.angle+=angle
-            rotated_img = pygame.transform.rotate(pygame.transform.flip(self.scaled_img, True, False), self.angle)
+            rotated_img = pygame.transform.rotate((self.scaled_img), self.angle)
             pivot_vec = pygame.Vector2(self.rotationcenter)
 
             new_center = pivot_vec - self.originaloffset.rotate(angle)
             self.rect = rotated_img.get_rect(center=new_center)
             self.img = rotated_img
-            #self.img = pygame.transform.flip(self.img, True, False)
+            self.img = pygame.transform.flip(self.img, True, False)
             self.mask = pygame.mask.from_surface(self.img)
             self.originaloffset = self.originaloffset.rotate(-angle)
         else:
@@ -110,9 +110,12 @@ class MapObject:
         if type == BUMPER_TYPE or type == FLIPPER_TYPE:
             self.rect.size = abs(offset[0]), abs(offset[0] * self.original_rect.height/self.original_rect.width)
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
-        self.img = pygame.transform.rotate(self.scaled_img, self.angle)
         if self.flipped:
+            #print("hello")
+            self.img = pygame.transform.rotate(self.scaled_img, -self.angle)
             self.img = pygame.transform.flip(self.img, True, False)
+        else:
+            self.img = pygame.transform.rotate(self.scaled_img, self.angle)
         self.mask = pygame.mask.from_surface(self.img)
 
         self.rotate_around_point(0)
@@ -173,7 +176,7 @@ class GameComponent(MapObject):
                 for i in range(len(points)):
                     points[i] = pygame.Vector2((-points[i][0], points[i][1]))
 
-            engine.convex_polygons.append(ConvexPolygon(*points, fixed = True, fixed_rotation=True))
+            engine.convex_polygons.append(ConvexPolygon(*points, fixed = True, fixed_rotation=True, mass_per_area=100))
             engine.convex_polygons[-1].Translate((self.rect.center[0], self.rect.center[1]))
             self.physics_engineID = [1, len(engine.convex_polygons)-1]
         elif self.component_type == WALL_TYPE:
