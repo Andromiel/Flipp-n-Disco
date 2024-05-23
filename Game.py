@@ -134,9 +134,9 @@ while loop:
         break
     if game.GameState == MENU:
 
-        pygame.mixer.music.load(menu_music)
-        pygame.mixer.music.set_volume(0.1)
-        pygame.mixer.music.play()
+        #pygame.mixer.music.load(menu_music)
+        #pygame.mixer.music.set_volume(0.1)
+        #pygame.mixer.music.play()
 
         level_map = MapObject(level_map_tex, level_map_name, WIDTH / 2, HEIGHT / 2, screen.get_size(), False)
         menu = MapObject(menu_tex, menu_name, WIDTH / 2, HEIGHT / 2, screen.get_size(), False)
@@ -227,9 +227,9 @@ while loop:
 
     if game.GameState == LEVEL_EDITOR:
 
-        pygame.mixer.music.load(editor_music)
-        pygame.mixer.music.set_volume(0.1)
-        pygame.mixer.music.play()
+        #pygame.mixer.music.load(editor_music)
+        #pygame.mixer.music.set_volume(0.1)
+        #pygame.mixer.music.play()
 
         previous_background = screen
 
@@ -384,6 +384,9 @@ while loop:
                             saving = True
                             while saving:
                                 for event in pygame.event.get():
+                                    if event.type == pygame.QUIT:
+                                        saving = False
+                                        break
                                     if event.type == pygame.MOUSEBUTTONDOWN:
                                         if input_box.collidepoint(event.pos):
                                             input_active = not input_active
@@ -631,9 +634,9 @@ while loop:
 
     if game.GameState == RUN_LEVEL:
 
-        pygame.mixer.music.load(level_music)
-        pygame.mixer.music.set_volume(0.1)
-        pygame.mixer.music.play()
+        #pygame.mixer.music.load(level_music)
+        #pygame.mixer.music.set_volume(0.1)
+        #pygame.mixer.music.play()
 
         engine.clear()
         for component in game.GameComponents:

@@ -73,22 +73,22 @@ class MapObject:
         self.rotationcenter = self.rect.center + self.originaloffset*size
         self.img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         if self.flipped:
-            self.img = pygame.transform.flip(self.img, False, True)
+            self.img = pygame.transform.flip(self.img, True, False)
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         self.mask = pygame.mask.from_surface(self.img)
 
     def rotate_around_point(self, angle):
         if self.flipped == True:
             self.angle+=angle
-            rotated_img = pygame.transform.rotate((self.scaled_img), -self.angle)
+            rotated_img = pygame.transform.rotate((self.scaled_img), self.angle)
             pivot_vec = pygame.Vector2(self.rotationcenter)
-
             new_center = pivot_vec - self.originaloffset.rotate(angle)
             self.rect = rotated_img.get_rect(center=new_center)
             self.img = rotated_img
-            self.img = pygame.transform.flip(self.img, True, False)
+            if self.flipped:
+                self.img = pygame.transform.flip(self.img, True, False)
             self.mask = pygame.mask.from_surface(self.img)
-            self.originaloffset = self.originaloffset.rotate(-angle)
+            self.originaloffset = self.originaloffset.rotate(angle)
         else:
             self.angle += angle
             rotated_img = pygame.transform.rotate(self.scaled_img, self.angle)
@@ -196,7 +196,11 @@ class GameComponent(MapObject):
             polygon = engine.convex_polygons[self.physics_engineID[1]]
             self.rect.center = polygon.center_of_mass
             if self.component_type == FLIPPER_TYPE:
-                self.rotate_around_point(-self.angle - polygon.rotation*180/pi)
+                if self.flipped:
+                    self.rotate_around_point(-self.angle + polygon.rotation*180/pi)
+                else:
+                    self.rotate_around_point(-self.angle - polygon.rotation*180/pi)
+
 
 
 '''

@@ -25,20 +25,23 @@ def ReadContent(filename):
         rotate_offset = attributes[3].split(",")
         rotate_offset = ((float(rotate_offset[0])), (float(rotate_offset[1])))
         component_type = int(attributes[5])
-        flipped = int(attributes[6])
-        if flipped:
-            pygame.transform.flip(skin, True, False)
-        object = GameComponent(skin, skin_name, pos[0], pos[1], angle = 0, object_type = component_type, flipped=flipped, rotation_offset=rotate_offset)
+        flipped = bool(int(attributes[6]))
+        print(flipped)
+        #if flipped:
+        #    pygame.transform.flip(skin, True, False)
+        object = GameComponent(skin, skin_name, pos[0], pos[1], angle = 0, object_type = component_type, flipped=False, rotation_offset=rotate_offset)
         #center = tuple(object.rect.center)
         #object.resize(60 / object.rect.size[0])
         #object.move_at(center)
         object.scale_to_size(size)
         object.rotate_around_point(angle)
+        if flipped:
+            object.flip_x_axis()
         list_objects.append(object)
     return list_objects
 
 def SaveContent(list_game_object, filename):
-    level_data = open(filename, "w+")
+    level_data = open(filename, "w")
     nb_objects = len(list_game_object)
     for i in range(nb_objects):
         object = list_game_object[i]
