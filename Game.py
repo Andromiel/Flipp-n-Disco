@@ -22,11 +22,12 @@ LEVEL_EDITOR = 1
 PLAY = 2
 MY_LEVELS = 3
 RUN_LEVEL = 4
+LOST = 5
 
 font = pygame.font.Font(None, 32)
 input_active = False
 saving = False
-input_box = pygame.Rect(WIDTH / 2 - 70, HEIGHT / 2 - 16, 140, 32)
+input_box = pygame.Rect(WIDTH / 2 - 105, HEIGHT / 2 - 32, 140, 32)
 color_inactive = pygame.Color('lightskyblue3')
 color_active = pygame.Color('dodgerblue2')
 text = ''
@@ -103,6 +104,10 @@ class Game:
     def DisplayLives(self):
         for i in range(self.lives):
             screen.blit(ball_tex, (10+60*i, 10))
+
+    def CheckState(self):
+        if self.lives == 0:
+            game.GameState = LOST
 
 transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
