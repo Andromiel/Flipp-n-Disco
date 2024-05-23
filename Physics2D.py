@@ -164,7 +164,7 @@ class ConvexPolygon:
 
     def Rotate(self, rotation, rotationpoint = None):
         if rotationpoint == None:
-            rotationpoint = pygame.Vector2(self.center_of_mass)
+            rotationpoint = pygame.Vector2(self.center_of_mass[0], self.center_of_mass[1])
         else:
             rotationpoint = pygame.Vector2(rotationpoint)
         self.rotation+=rotation
@@ -348,7 +348,7 @@ class PhysicsEngine:
                     collision[1] = yA + (yB - yA) * coeff
                     normal = (ball.position-collision)
                     normal = normal/np.linalg.norm(normal)
-                    ball.position = ball.position + normal*(ball.radius-D)
+                    ball.position = ball.position + normal*(ball.radius-D)*3
                     return True, collision, normal
         for i in range(len(polygon.points)):
             A = polygon.points[i]
@@ -372,31 +372,67 @@ class PhysicsEngine:
                         collision = B
                     normal = (ball.position-collision)
                     normal = normal/np.linalg.norm(normal)
-                    ball.position = ball.position + normal*(ball.radius-np.linalg.norm(ball.position-collision))
+                    ball.position = ball.position + normal*(ball.radius-np.linalg.norm(ball.position-collision))*3
                     return True, collision, normal
         return False, collision, normal
+    def FindAndSolveCollisionBetweenBallAndBall(self, b1 : Ball, b2 : Ball):
+        if b1.radius + b2.radius > np.linalg.norm(b1.position - b2.position):
+            dif = b1.radius + b2.radius - np.linalg.norm(b1.position - b2.position)
+            normal = (b2.position - b1.position)/np.linalg.norm(b1.position - b2.position)
+            if not b1.fixed_in_space:
+                b1.position = b1.position - normal*dif*(b1.radius/(b1.radius + b2.radius))
+            if not b2.fixed_in_space:
+                b2.position = b2.position + normal * dif * (b2.radius / (b1.radius + b2.radius))
+            return True, b1.position + normal, normal
+        else:
+            return False, np.array((0, 0)), np.array((0, 0))
+
+    def ComputeCollisionResponseBetweenBallAndBall(self, b1 : Ball, b2 : Ball, collision : np.array, normal : np.array):
+        e = 1.0
+        v_ab = (b1.velocity - b2.velocity)
+        m1 = b1.area * b1.mass_per_area
+        m2 = b2.area * b2.mass_per_area
+        inverse_masses = 1.0/m1 + 1.0/m2
+        if b1.fixed_in_space:
+            b2.velocity = b2.velocity - (-(1+e) * np.dot(v_ab, normal)/(inverse_masses))/m1*normal
+        elif b2.fixed_in_space:
+            b1.velocity = b1.velocity + (-(1 + e) * np.dot(v_ab, normal) / (inverse_masses)) / m2 * normal
+        else:
+            b2.velocity = b2.velocity - (-(1+e) * np.dot(v_ab, normal)/(inverse_masses))/m1*normal
+            b1.velocity = b1.velocity + (-(1 + e) * np.dot(v_ab, normal) / (inverse_masses)) / m2 * normal
+
+
+
 
     def ComputeCollisionResponseBetweenBallAndPolygon(self, ball : Ball, polygon : ConvexPolygon, collision : np.array, normal : np.array):
-        e = 0.9
+        e = 1.0
         ap = collision - ball.position
         bp = collision - polygon.center_of_mass
-        v_ab = (ball.velocity + ball.rotational_velocity * np.array((-ap[1], ap[0]))) - (
-                polygon.displacement + polygon.angular_displacement * np.array((-bp[1], bp[0])) )
+        #v_ab = (ball.velocity + ball.rotational_velocity * np.array((-ap[1], ap[0]))) - (polygon.velocity + polygon.rotational_velocity * np.array((-bp[1], bp[0])) )
+        v_ab = (ball.velocity) - (polygon.velocity + polygon.rotational_velocity * np.array((-bp[1], bp[0])))
         j = -(1.0 + e) * np.dot(v_ab, normal)
         inverse_masses = 1.0 / (ball.mass_per_area * ball.area) + 1.0 / (polygon.mass_per_area * polygon.area)
         if ball.fixed_in_space == True:
-            inverse_masses = 1.0 / (polygon.mass_per_area * polygon.area)
+            inverse_masses = 1.0 / (polygon.mass_per_area * polygon.area) + (1.0 / (ball.mass_per_area * ball.area))
             j = j / (inverse_masses + (np.dot(np.array((-bp[1], bp[0])), normal) ** 2 / polygon.rotational_inertia))
             polygon.velocity = polygon.velocity - normal * j / (polygon.mass_per_area * polygon.area)
             polygon.rotational_velocity = polygon.rotational_velocity - np.dot(np.array((-bp[1], bp[0])),
                                                                                normal) * j / polygon.rotational_inertia
-        elif polygon.fixed_in_space == True:
-            inverse_masses = 1.0 / (ball.mass_per_area * ball.area) + 1.0/(polygon.mass_per_area * polygon.area)
+        elif polygon.fixed_in_space == True and polygon.fixed_rotation == True:
+            #print("hey")
+            '''
+            inverse_masses = 1.0 / (ball.mass_per_area * ball.area)+1.0 / (polygon.mass_per_area * polygon.area)
             j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal) ** 2 / ball.rotational_inertia) + (
                     np.dot(np.array((-bp[1], bp[0])), normal) ** 2 / polygon.rotational_inertia))
-            ball.velocity = ball.velocity + normal * j / (ball.mass_per_area * ball.area)
-            ball.rotational_velocity = ball.rotational_velocity + np.dot(np.array((-ap[1], ap[0])),
-                                                                         normal) * j / ball.rotational_inertia
+            '''
+            v_pol = polygon.rotational_velocity * np.array((-bp[1], bp[0]))
+
+            #ball.velocity = ball.velocity + normal * j / (ball.mass_per_area * ball.area)
+            m1 = ball.mass_per_area * ball.area
+            m2 = polygon.area * polygon.mass_per_area
+            #ball.velocity = (ball.velocity*m1 + v_pol * m2 - (ball.velocity - v_pol)/(m2)) / (m1+m2)
+            ball.velocity = ball.velocity + (-(1+e) * np.dot(v_ab, normal)/(inverse_masses))/m1*normal
+            #ball.rotational_velocity = ball.rotational_velocity + np.dot(np.array((-ap[1], ap[0])),normal) * j / ball.rotational_inertia
         else:
             j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal) ** 2 / ball.rotational_inertia) + (
                     np.dot(np.array((-bp[1], bp[0])), normal) ** 2 / polygon.rotational_inertia))
@@ -432,6 +468,13 @@ class PhysicsEngine:
                 compute = self.FindAndSolveCollisionBetweenBallAndPolygon(self.balls[j], self.convex_polygons[i])
                 if compute[0] == True:
                     self.ComputeCollisionResponseBetweenBallAndPolygon(self.balls[j], self.convex_polygons[i], compute[1], compute[2])
+        for i in range(len(self.balls)):
+            for j in range(i+1, len(self.balls)):
+                if i==j:
+                    continue
+                compute = self.FindAndSolveCollisionBetweenBallAndBall(self.balls[i], self.balls[j])
+                if compute[0] == True:
+                    self.ComputeCollisionResponseBetweenBallAndBall(self.balls[i], self.balls[j], compute[1], compute[2])
         for i in range(len(self.convex_polygons)):
             if self.convex_polygons[i].fixed_in_space == False:
                 self.convex_polygons[i].velocity = self.convex_polygons[i].velocity + np.array((0, 9.81*20))*delta_time
@@ -445,7 +488,7 @@ class PhysicsEngine:
             #self.convex_polygons[i].DisplayPoints(screen)
         for i in range(len(self.balls)):
             if not self.balls[i].fixed_in_space:
-                self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*20))*delta_time
+                self.balls[i].velocity = self.balls[i].velocity + np.array((0, 9.81*40))*delta_time
                 self.balls[i].position = self.balls[i].position + self.balls[i].velocity * delta_time
                 self.balls[i].velocity *= (0.999)
             #self.balls[i].Display(screen)

@@ -79,9 +79,8 @@ class MapObject:
 
     def rotate_around_point(self, angle):
         if self.flipped == True:
-
             self.angle+=angle
-            rotated_img = pygame.transform.rotate((self.scaled_img), self.angle)
+            rotated_img = pygame.transform.rotate((self.scaled_img), -self.angle)
             pivot_vec = pygame.Vector2(self.rotationcenter)
 
             new_center = pivot_vec - self.originaloffset.rotate(angle)
