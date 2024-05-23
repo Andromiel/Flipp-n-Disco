@@ -5,10 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Added canon to options">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_19_2024_2_23_PM__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_19_2024_2_23_PM__Changes_.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Sounds/music_level1_MJ.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Sounds/music_level2_BS.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Sounds/music_level3_CD.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Sounds/music_level_editor_creep.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/custom_levels/Default_Level.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LevelData.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Default_Level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelData.txt" beforeDir="false" afterPath="$PROJECT_DIR$/custom_levels/LevelData.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +66,10 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco" />
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\textures" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\custom_levels" />
+      <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\Sounds" />
     </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

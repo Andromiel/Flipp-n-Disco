@@ -18,7 +18,7 @@ def ReadContent(filename):
         pos = (int(pos[0]), int(pos[1]))
         size = attributes[2].split(",")
         size = (int(size[0]), int(size[1]))
-        angle = int(attributes[4])
+        angle = float(attributes[4])
         skin_name = str(attributes[1])[0:]
         skin = pygame.image.load("textures/" + skin_name)
         #skin = pygame.transform.rotate(skin, angle)
@@ -27,7 +27,6 @@ def ReadContent(filename):
         component_type = int(attributes[5])
         flipped = int(attributes[6])
         if flipped:
-            print("hello : ", flipped)
             pygame.transform.flip(skin, True, False)
         object = GameComponent(skin, skin_name, pos[0], pos[1], angle = 0, object_type = component_type, flipped=flipped, rotation_offset=rotate_offset)
         #center = tuple(object.rect.center)
@@ -39,7 +38,7 @@ def ReadContent(filename):
     return list_objects
 
 def SaveContent(list_game_object, filename):
-    level_data = open(filename, "w")
+    level_data = open(filename, "w+")
     nb_objects = len(list_game_object)
     for i in range(nb_objects):
         object = list_game_object[i]
