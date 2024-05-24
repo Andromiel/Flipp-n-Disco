@@ -653,6 +653,7 @@ while loop:
             pygame.display.update()
 
     if game.GameState == RUN_LEVEL and current_level != None:
+        game.lives = 3
 
         #pygame.mixer.music.load(level_music)
         #pygame.mixer.music.set_volume(0.1)
@@ -665,7 +666,18 @@ while loop:
         engine.clear()
         for component in game.GameComponents:
             component.connect_with_physics_engine(engine)
-        engine.balls.append(Ball(WIDTH / 2 - 100, HEIGHT / 2, 30, 1.0, False))
+        ball_radius = 30
+        added_ball = False
+        #engine.balls.append(Ball(WIDTH / 2 - 100, HEIGHT / 2, ball_radius, 1.0, False))
+
+        lost_screen = False
+
+        lost_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        lost_font = pygame.font.Font( None, 100)
+        lost_text = lost_font.render("YOU LOST", True, (255, 0, 0))
+        lost_surface.blit(lost_text, (WIDTH/2-lost_text.get_width()/2, HEIGHT/2))
+
+        canon_pos = (0, 0)
         while game.GameState == RUN_LEVEL:
             clock.tick(60)
             screen.fill((0, 120, 35))
@@ -678,6 +690,14 @@ while loop:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         game.GameState = MENU
+                    if event.key == pygame.K_p:
+                        for component in game.GameComponents:
+                            if component.component_type == CANON_TYPE:
+                                canon_pos = component.rect.center
+                                added_ball = True
+                                engine.balls.append(Ball(canon_pos[0], canon_pos[1], ball_radius, 1.0, False))
+                                engine.balls[-1].velocity = (0, -500)
+                                break
             engine.Update(screen, 1.0 / 60.0)
             game.ShowComponents()
 
@@ -734,11 +754,23 @@ while loop:
                                                                                          pygame.Vector2(
                                                                                              component.rotationcenter))
 
+            if added_ball:
+                if game.lives <= 0:
+                    lost_screen = True
+                if engine.balls[-1].position[1] - ball_radius > HEIGHT and game.lives>=1:
+                    game.lives -=1
+                    if game.lives>0:
+                        engine.balls[-1].position = canon_pos
+                        engine.balls[-1].velocity = (0, -500)
+
+                if lost_screen:
+                    screen.blit(lost_surface, (0, 0))
+
             # engine.convex_polygons[0].Rotate(0.1)
             for ball in engine.balls:
                 pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
 
-            if engine.balls:
+            if engine.balls and added_ball:
                 engine.balls[-1].Display(screen)
             game.DisplayLives()
             pygame.display.update()
