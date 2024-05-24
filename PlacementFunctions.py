@@ -50,6 +50,8 @@ class MapObject:
 
         self.type = NO_TYPE
 
+        self.liste_index = None
+
     def display(self, surface):
         surface.blit(self.img, self.rect)
         if self.show_rotating_point:

@@ -14,6 +14,8 @@ class Ball:
         self.acceleration = np.array((0.0, 0.0))
 
         self.fixed_in_space=fixed_in_space
+
+        self.score = 0
     def Display(self, screen):
         pygame.draw.circle(screen, (255, 0, 0), self.position, self.radius)
 

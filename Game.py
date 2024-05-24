@@ -681,7 +681,13 @@ while loop:
         lost_text = lost_font.render("YOU LOST", True, (255, 0, 0))
         lost_surface.blit(lost_text, (WIDTH / 2 - lost_text.get_width() / 2, HEIGHT / 2))
 
+        score_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        score_font = pygame.font.Font( None, 100)
+
+
         canon_pos = (0, 0)
+
+        score = 0
         while game.GameState == RUN_LEVEL:
             clock.tick(60)
             screen.fill((0, 120, 35))
@@ -769,10 +775,16 @@ while loop:
 
                 if lost_screen:
                     screen.blit(lost_surface, (0, 0))
+            score_text = score_font.render(str(score), True, (255, 0, 0))
+            score_surface.fill((0, 0, 0, 0))
+            score_surface.blit(score_text, (0, 0))
+            screen.blit(score_surface, (0, 0))
 
             # engine.convex_polygons[0].Rotate(0.1)
+            score = 0
             for ball in engine.balls:
                 pygame.draw.circle(screen, (255, 0, 0), ball.position, ball.radius, width=3)
+                score+=ball.score
 
             if engine.balls and added_ball:
                 engine.balls[-1].Display(screen)
