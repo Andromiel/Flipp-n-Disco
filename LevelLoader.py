@@ -26,7 +26,6 @@ def ReadContent(filename):
         rotate_offset = ((float(rotate_offset[0])), (float(rotate_offset[1])))
         component_type = int(attributes[5])
         flipped = bool(int(attributes[6]))
-        print(flipped)
         #if flipped:
         #    pygame.transform.flip(skin, True, False)
         object = GameComponent(skin, skin_name, pos[0], pos[1], angle = 0, object_type = component_type, flipped=False, rotation_offset=rotate_offset)

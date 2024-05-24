@@ -24,15 +24,6 @@ MY_LEVELS = 3
 RUN_LEVEL = 4
 LOST = 5
 
-font = pygame.font.Font(None, 32)
-input_active = False
-saving = False
-input_box = pygame.Rect(WIDTH / 2 - 105, HEIGHT / 2 - 32, 140, 32)
-color_inactive = pygame.Color('lightskyblue3')
-color_active = pygame.Color('dodgerblue2')
-text = ''
-done = False
-
 menu_music = "Sounds/music_level1_MJ.mp3"
 editor_music = "Sounds/music_level_editor_creep.mp3"
 level_music = "Sounds/music_level3_CD.mp3"
@@ -45,6 +36,8 @@ button_name = "textures/plus sign.png"
 save_button_name = "textures/savebutton.png"
 load_button_name = "textures/loadbutton.png"
 help_button_name = "textures/helpbutton.png"
+custom_levels_play_button_name = "textures/custom_levels_play_button.png"
+custom_levels_edit_button_name = "textures/custom_levels_edit_button.png"
 
 ball_name = "textures/ball.png"
 flipper_name = "textures/flipper.png"
@@ -65,6 +58,8 @@ canon_tex = pygame.image.load(canon_name)
 save_button_tex = pygame.image.load(save_button_name)
 load_button_tex = pygame.image.load(load_button_name)
 help_button_tex = pygame.image.load(help_button_name)
+custom_levels_play_button_tex = pygame.image.load(custom_levels_play_button_name)
+custom_levels_edit_button_tex = pygame.image.load(custom_levels_edit_button_name)
 
 level_map_name = "textures/LEVEL MAP.png"
 level_map_tex = pygame.image.load(level_map_name)
@@ -82,6 +77,9 @@ levels_numbers_names = os.listdir(directory)
 levels_numbers_tex = [pygame.image.load("textures/levels_numbers/" + name) for name in levels_numbers_names]
 custom_levels = os.listdir("custom_levels")
 custom_levels = [custom_levels[i][:-4] for i in range(len(custom_levels))]
+game_levels = os.listdir("game_levels")
+#game_levels = [game_levels[i] for i in range(len(game_levels))]
+current_level = game_levels[0] if len(game_levels)>0 else None
 
 from PlacementFunctions import GameComponent
 from PlacementFunctions import PhysicsEngine
@@ -226,6 +224,8 @@ while loop:
             pygame.display.update()
 
     if game.GameState == LEVEL_EDITOR:
+        if current_level != None:
+            game.GameComponents = ReadContent(current_level)
 
         #pygame.mixer.music.load(editor_music)
         #pygame.mixer.music.set_volume(0.1)
@@ -258,7 +258,8 @@ while loop:
         SHOW_EVERYTHING = 0
         CHOOSE_OBJECT = 1
         INSTRUCTIONS = 2
-        editing_sate = SHOW_EVERYTHING
+        ENTER_LEVEL_NAME = 3
+        editing_state = SHOW_EVERYTHING
 
         selected_object = None, None
 
@@ -295,13 +296,13 @@ while loop:
 
             events = pygame.event.get()
 
-            if editing_sate == CHOOSE_OBJECT:
+            if editing_state == CHOOSE_OBJECT:
 
                 for i in range(len(events)):
                     event = events[i]
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
-                            editing_sate = SHOW_EVERYTHING
+                            editing_state = SHOW_EVERYTHING
                             events.pop(i)
                             break
 
@@ -339,7 +340,7 @@ while loop:
                     else:
                         pygame.draw.rect(screen, (0, 255, 0), canon_choose.rect, 3)
                 if chose_object != -1:
-                    editing_sate = SHOW_EVERYTHING
+                    editing_state = SHOW_EVERYTHING
                     if chose_object == BUMPER:
                         game.GameComponents.append(
                             GameComponent(bumper_tex, bumper_name, WIDTH / 2, HEIGHT / 2, object_type=BUMPER_TYPE))
@@ -364,7 +365,7 @@ while loop:
                         center = game.GameComponents[-1].rect.center
                         game.GameComponents[-1].resize(60 / game.GameComponents[-1].rect.size[0])
                         game.GameComponents[-1].move_at(center)
-            if editing_sate == SHOW_EVERYTHING:
+            if editing_state == SHOW_EVERYTHING:
                 add_button.update(screen)
                 load_button.update(screen)
                 save_button.update(screen)
@@ -378,48 +379,15 @@ while loop:
                 for event in events:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if add_button.collidesmouse():
-                            editing_sate = CHOOSE_OBJECT
+                            editing_state = CHOOSE_OBJECT
                         if save_button.collidesmouse():
-                            level_name = None
-                            saving = True
-                            while saving:
-                                for event in pygame.event.get():
-                                    if event.type == pygame.QUIT:
-                                        saving = False
-                                        break
-                                    if event.type == pygame.MOUSEBUTTONDOWN:
-                                        if input_box.collidepoint(event.pos):
-                                            input_active = not input_active
-                                        else:
-                                            input_active = False
-                                    color = color_active if input_active else color_inactive
-                                    if event.type == pygame.KEYDOWN:
-                                        if input_active:
-                                            if event.key == pygame.K_RETURN:
-                                                level_name = text
-                                                text = ''
-                                                saving = False
-                                                break
-                                            elif event.key == pygame.K_BACKSPACE:
-                                                text = text[:-1]
-                                            else:
-                                                text += event.unicode
-                                screen.fill((150, 100, 170))
-                                txt_surface = font.render(text, True, color_inactive)
-                                input_box.w = max(200, txt_surface.get_width() + 10)
-                                screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
-                                pygame.draw.rect(screen, color_inactive, input_box, 2)
-                                pygame.display.flip()
-                            if level_name is not None:
-                                SaveContent(game.GameComponents, "custom_levels/"+level_name+".txt")
-                                custom_levels.append(level_name)
-
+                            editing_state = ENTER_LEVEL_NAME
                         if load_button.collidesmouse():
                             game.GameComponents = ReadContent("custom_levels/LevelData.txt")
                             selected_objects.clear()
                             selected_object = None, None
                         if help_button.collidesmouse():
-                            editing_sate = INSTRUCTIONS
+                            editing_state = INSTRUCTIONS
 
                 for event in events:
                     if event.type == pygame.KEYDOWN:
@@ -531,20 +499,71 @@ while loop:
                                 selected_object = None, None
                                 selected_objects.clear()
 
-            if editing_sate == INSTRUCTIONS:
+            if editing_state == INSTRUCTIONS:
                 screen.fill((112, 48, 160))
                 screen.blit(instructions_tex, (0, 0))
                 help_button.update(screen)
                 for event in events:
                     if event.type == pygame.MOUSEBUTTONUP:
-                        editing_sate = SHOW_EVERYTHING
+                        editing_state = SHOW_EVERYTHING
+            if editing_state == ENTER_LEVEL_NAME:
+                font = pygame.font.Font(None, 32)
+                input_active = False
+                input_box = pygame.Rect(WIDTH / 2 - 105, HEIGHT / 2 - 32, 140, 32)
+                color_inactive = pygame.Color('lightskyblue3')
+                color_active = pygame.Color('dodgerblue2')
+                text = ''
+                enter_level_title = "Click the box to enter your level's name"
+                done = False
+                level_name = None
+                while editing_state == ENTER_LEVEL_NAME:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            editing_state = QUIT
+                            game.GameState = QUIT
+                            break
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            if input_box.collidepoint(event.pos):
+                                input_active = not input_active
+                            else:
+                                input_active = False
+                        color = color_active if input_active else color_inactive
+                        if event.type == pygame.KEYDOWN:
+                            if input_active:
+                                if event.key == pygame.K_RETURN:
+                                    level_name = text
+                                    text = ''
+                                    editing_state = SHOW_EVERYTHING
+                                    break
+                                elif event.key == pygame.K_BACKSPACE:
+                                    text = text[:-1]
+                                else:
+                                    text += event.unicode
+                    screen.fill((150, 100, 170))
+                    if input_active:
+                        if int(pygame.time.get_ticks()/500)%2 == 0:
+                            txt_surface = font.render(text, True, color_inactive)
+                        else:
+                            txt_surface = font.render(text + '|', True, color_inactive)
+                    else:
+                        txt_surface = font.render(text, True, color_inactive)
 
+                    title_surface = font.render(enter_level_title, True, color_inactive)
+                    input_box.w = max(200, txt_surface.get_width() + 10)
+                    screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+                    screen.blit(title_surface, (WIDTH/2 - title_surface.get_width()/2, input_box.y - 50))
+                    pygame.draw.rect(screen, color_inactive, input_box, 2)
+                    pygame.display.update()
+                if level_name is not None:
+                    SaveContent(game.GameComponents, "custom_levels/" + level_name + ".txt")
+                    if level_name not in custom_levels:
+                        custom_levels.append(level_name)
             for event in events:
                 if event.type == pygame.QUIT:
                     game.GameState = QUIT
                     loop = False
                 if event.type == pygame.MOUSEBUTTONDOWN and add_button.collidesmouse():
-                    editing_sate = CHOOSE_OBJECT
+                    editing_state = CHOOSE_OBJECT
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         game.GameState = MENU
@@ -556,7 +575,7 @@ while loop:
 
         level_map = MapObject(level_map_tex, level_map_name, WIDTH / 2, HEIGHT / 2, (screen.get_size()))
 
-        n_levels = 5
+        n_levels = len(game_levels)
         levels_numbers = []
 
         for i in range(n_levels):
@@ -600,7 +619,7 @@ while loop:
                     if event.key == pygame.K_ESCAPE:
                         game.GameState = MENU
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == pygame.K_LEFT:
+                    if event.button == pygame.BUTTON_LEFT:
                         clicked = True
             pressed = pygame.key.get_pressed()
 
@@ -609,8 +628,9 @@ while loop:
                     if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] < 0.8):
                         levels_numbers[i].resize(1.03)
                         shadows[i].resize(1.05)
-
-                    game.GameState = RUN_LEVEL
+                    if clicked:
+                        game.GameState = RUN_LEVEL
+                        current_level = "game_levels/"+game_levels[i]
                 else:
                     if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] > 0.7):
                         levels_numbers[i].resize(0.97)
@@ -632,11 +652,15 @@ while loop:
 
             pygame.display.update()
 
-    if game.GameState == RUN_LEVEL:
+    if game.GameState == RUN_LEVEL and current_level != None:
 
         #pygame.mixer.music.load(level_music)
         #pygame.mixer.music.set_volume(0.1)
         #pygame.mixer.music.play()
+
+        game.GameComponents = ReadContent(current_level)
+
+        launched = False
 
         engine.clear()
         for component in game.GameComponents:
@@ -724,13 +748,22 @@ while loop:
         menu_rect, scrollerbar_rect, scroller_rect, text_surfaces, text_rects, font = menu_data
         selected_level = [False, None]
 
+        custom_levels_play_button = MapObject(custom_levels_play_button_tex, custom_levels_play_button_name, 50, 150,
+                                              (200, 200 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width()))
+        custom_levels_play_button.scale_to_size(((100, 100 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width())))
+        custom_levels_edit_button = MapObject(custom_levels_edit_button_tex, custom_levels_edit_button_name, 50, 200,
+                                              (200, 200 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
+        custom_levels_edit_button.scale_to_size((100, 100 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
+        level_id = 0
         while game.GameState == MY_LEVELS:
 
-            level_id = 0
             events = pygame.event.get()
             screen.fill((200, 180, 90))
             selected_level[0] = False
             mouse_scroll = (0, 0)
+
+            custom_levels_play_button.update(screen)
+            custom_levels_edit_button.update(screen)
 
             for i in range(len(events)):
                 event = events[i]
@@ -771,8 +804,22 @@ while loop:
 
             if selected_level[1] is not None:
                 pygame.draw.rect(screen, (0, 255, 0), selected_level[1], 3)
-                game.GameComponents = ReadContent("custom_levels/"+custom_levels[level_id]+".txt")
-                game.GameState = LEVEL_EDITOR
+                #current_level = custom_levels[level_id] + '.txt'
+                #game.GameState = LEVEL_EDITOR
+
+
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == pygame.BUTTON_LEFT:
+                        if custom_levels_play_button.collidesmouse():
+                            if selected_level[1] is not None:
+                                current_level = "custom_levels/"+custom_levels[level_id] + '.txt'
+                                game.GameState = RUN_LEVEL
+                        if custom_levels_edit_button.collidesmouse():
+                            if selected_level[1] is not None:
+                                current_level = "custom_levels/"+custom_levels[level_id] + '.txt'
+                                game.GameState = LEVEL_EDITOR
+
 
             pygame.display.update()
 
