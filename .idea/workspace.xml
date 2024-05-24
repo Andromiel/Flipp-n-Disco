@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Added play/edit button to &quot;my levels&quot; menu and now the number of levels in PLAY adapts to the number in the folder">
+    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Lives work now, lost screen added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/level1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/custom_levels/level1.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,7 +139,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716537529936</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Lives work now, lost screen added">
+      <option name="closed" value="true" />
+      <created>1716573587273</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1716573587273</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -157,6 +168,7 @@
     <MESSAGE value="Minor fix" />
     <MESSAGE value="ZERO TEXTURE BUG AMEN" />
     <MESSAGE value="Added play/edit button to &quot;my levels&quot; menu and now the number of levels in PLAY adapts to the number in the folder" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added play/edit button to &quot;my levels&quot; menu and now the number of levels in PLAY adapts to the number in the folder" />
+    <MESSAGE value="Lives work now, lost screen added" />
+    <option name="LAST_COMMIT_MESSAGE" value="Lives work now, lost screen added" />
   </component>
 </project>

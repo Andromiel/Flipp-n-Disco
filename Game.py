@@ -529,6 +529,9 @@ while loop:
                                 input_active = False
                         color = color_active if input_active else color_inactive
                         if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_ESCAPE:
+                                input_active = False
+                                editing_state = SHOW_EVERYTHING
                             if input_active:
                                 if event.key == pygame.K_RETURN:
                                     level_name = text
