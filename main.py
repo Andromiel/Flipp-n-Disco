@@ -766,11 +766,11 @@ while loop:
                                                                                          pygame.Vector2(
                                                                                              component.rotationcenter))
             if added_ball:
-                if engine.balls[-1].position[1] - ball_radius > HEIGHT and game.lives >= 0:
-                    if game.lives > 0:
+                if engine.balls[-1].position[1] - ball_radius > HEIGHT:
+                    game.lives -= 1
+                    if game.lives >= 0:
                         engine.balls[-1].position = canon_pos
                         engine.balls[-1].velocity = (0, -500)
-                        game.lives -= 1
 
             if game.lives < 0:
                 lost_screen = True

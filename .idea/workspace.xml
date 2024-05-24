@@ -5,25 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="rotated flippers conserve rotation">
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_2.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_3.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_4.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_5.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game_levels/Level_6.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MenuScroller.py" beforeDir="false" afterPath="$PROJECT_DIR$/MenuScroller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/Default_Level.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/INUTILE.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/LevelData.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/creeper.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/htrtyrytr.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/niveau trop bien.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/textures/instructions.png" beforeDir="false" afterPath="$PROJECT_DIR$/textures/instructions.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +62,7 @@
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\textures" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Sidne\PycharmProjects\Flipp-n-Disco\textures" />
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\custom_levels" />
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\Sounds" />
     </key>
