@@ -33,8 +33,6 @@ class MapObject:
         self.originaloffset = pygame.Vector2((0, 0))
         self.mask = pygame.mask.from_surface(self.img)
         self.rotationcenter = self.rect.center
-        # if rotate_offset != None:
-        #    self.originaloffset = pygame.Vector2(rotate_offset)
         if rotate_offset != None:
             self.originaloffset = pygame.Vector2(rotate_offset)
             self.rotationcenter = pygame.Vector2(self.rect.center) + pygame.Vector2(self.originaloffset)
@@ -55,7 +53,8 @@ class MapObject:
     def display(self, surface):
         surface.blit(self.img, self.rect)
         if self.show_rotating_point:
-            pygame.draw.circle(surface, (255, 0, 0), self.rotationcenter, 3)
+            if self.show_rotating_point:
+                pygame.draw.circle(surface, (255, 0, 0), self.rotationcenter, 3)
             pygame.draw.line(surface, (0, 255, 255), self.rect.center, self.rotationcenter)
 
     def move_at(self, pos):
@@ -118,7 +117,6 @@ class MapObject:
             self.rect.size = abs(offset[0]), abs(offset[0] * self.original_rect.height / self.original_rect.width)
         self.scaled_img = pygame.transform.smoothscale(self.original_img, self.rect.size)
         if self.flipped:
-            # print("hello")
             self.img = pygame.transform.rotate(self.scaled_img, -self.angle)
             self.img = pygame.transform.flip(self.img, True, False)
         else:

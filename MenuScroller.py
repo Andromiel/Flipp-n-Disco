@@ -7,7 +7,6 @@ pygame.init()
 text_size = 20
 def GenerateMenu(level_list, surface):
     width, height = surface.get_size()
-    print(width, height)
     font = pygame.font.Font("freesansbold.ttf", 20)
     menu_rect = pygame.Rect(width / 4, height / 4, width / 2, height / 2)
     scrollerbar_rect = pygame.Rect(menu_rect.right + 50, menu_rect.y, 20, menu_rect.height)

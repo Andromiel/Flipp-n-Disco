@@ -6,10 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="rotated flippers conserve rotation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Ball.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ball.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Physics2D.py" beforeDir="false" afterPath="$PROJECT_DIR$/Physics2D.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MenuScroller.py" beforeDir="false" afterPath="$PROJECT_DIR$/MenuScroller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/Default_Level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/INUTILE.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/LevelData.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/creeper.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/htrtyrytr.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom_levels/niveau trop bien.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,15 +54,18 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Game&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Sidne/OneDrive/Bureau/Flipp-n-Disco&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Game.executor": "Run",
+    "Python.PlacementFunctions.executor": "Run",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "Game",
+    "last_opened_file_path": "C:/Users/Sidne/OneDrive/Bureau/Flipp-n-Disco",
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco" />
@@ -65,30 +75,6 @@
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\custom_levels" />
       <recent name="C:\Users\Sidne\OneDrive\Bureau\Flipp-n-Disco\Sounds" />
     </key>
-  </component>
-  <component name="RunManager">
-    <configuration name="Game" type="PythonConfigurationType" factoryName="Python">
-      <module name="Flipper projet transverse" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.10" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="Game.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
