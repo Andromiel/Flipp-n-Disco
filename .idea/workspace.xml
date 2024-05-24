@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="Lives work now, lost screen added">
+    <list default="true" id="ee09324a-3735-4b83-9393-d9bb5f877e71" name="Changes" comment="rotated flippers conserve rotation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ball.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ball.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LevelLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/LevelLoader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics2D.py" beforeDir="false" afterPath="$PROJECT_DIR$/Physics2D.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PlacementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PlacementFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom_levels/level1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/custom_levels/level1.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -147,7 +147,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716573587273</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="rotated flippers conserve rotation">
+      <option name="closed" value="true" />
+      <created>1716577737386</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1716577737386</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -169,6 +177,7 @@
     <MESSAGE value="ZERO TEXTURE BUG AMEN" />
     <MESSAGE value="Added play/edit button to &quot;my levels&quot; menu and now the number of levels in PLAY adapts to the number in the folder" />
     <MESSAGE value="Lives work now, lost screen added" />
-    <option name="LAST_COMMIT_MESSAGE" value="Lives work now, lost screen added" />
+    <MESSAGE value="rotated flippers conserve rotation" />
+    <option name="LAST_COMMIT_MESSAGE" value="rotated flippers conserve rotation" />
   </component>
 </project>

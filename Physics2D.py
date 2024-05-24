@@ -381,8 +381,10 @@ class PhysicsEngine:
             normal = (b2.position - b1.position)/np.linalg.norm(b1.position - b2.position)
             if not b1.fixed_in_space:
                 b1.position = b1.position - normal*dif*(b1.radius/(b1.radius + b2.radius))
+                b2.score+=10
             if not b2.fixed_in_space:
                 b2.position = b2.position + normal * dif * (b2.radius / (b1.radius + b2.radius))
+                b1.score+=10
             return True, b1.position + normal, normal
         else:
             return False, np.array((0, 0)), np.array((0, 0))
@@ -431,7 +433,7 @@ class PhysicsEngine:
             m1 = ball.mass_per_area * ball.area
             m2 = polygon.area * polygon.mass_per_area
             #ball.velocity = (ball.velocity*m1 + v_pol * m2 - (ball.velocity - v_pol)/(m2)) / (m1+m2)
-            ball.velocity = ball.velocity + (-(1+e) * np.dot(v_ab, normal)/(inverse_masses))/m1*normal
+            ball.velocity = ball.velocity + (-(1+e) * np.dot(v_ab, normal)/(inverse_masses))/m1*normal * 1.1
             #ball.rotational_velocity = ball.rotational_velocity + np.dot(np.array((-ap[1], ap[0])),normal) * j / ball.rotational_inertia
         else:
             j = j / (inverse_masses + (np.dot(np.array((-ap[1], ap[0])), normal) ** 2 / ball.rotational_inertia) + (
