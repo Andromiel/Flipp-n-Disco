@@ -772,7 +772,7 @@ while loop:
                         engine.balls[-1].velocity = (0, -500)
                         game.lives -= 1
 
-            if game.lives <= 0:
+            if game.lives < 0:
                 lost_screen = True
             if lost_screen:
                 screen.blit(lost_surface, (0, 0))
