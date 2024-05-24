@@ -27,6 +27,10 @@ def ReadContent(filename):
         component_type = int(attributes[5])
         flipped = bool(int(attributes[6]))
 
+        level_color = (30, 90, 120)
+        if len(attributes) >7:
+            level_color = (int(attributes[7][0]), int(attributes[7][1]), int(attributes[7][2]))
+
         object = GameComponent(skin, skin_name, pos[0], pos[1], angle = 0, object_type = component_type, flipped=False, rotation_offset=rotate_offset)
         object.scale_to_size(size)
         object.rotate_around_point(angle)
@@ -34,6 +38,7 @@ def ReadContent(filename):
         if flipped:
             object.flip_x_axis()
         list_objects.append(object)
+
     return list_objects
 
 def SaveContent(list_game_object, filename):

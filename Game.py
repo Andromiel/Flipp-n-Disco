@@ -48,7 +48,7 @@ canon_name = "textures/canon.png"
 instructions_tex = pygame.image.load("textures/instructions.png")
 instructions_tex = pygame.transform.smoothscale(instructions_tex, (
     WIDTH, WIDTH * instructions_tex.get_height() / instructions_tex.get_width()))
-ball_tex = pygame.transform.smoothscale(pygame.image.load(ball_name), (50,50))
+ball_tex = pygame.transform.smoothscale(pygame.image.load(ball_name), (50, 50))
 button_tex = pygame.image.load(button_name)
 flipper_tex = pygame.image.load(flipper_name)
 bumper_tex = pygame.image.load(bumper_name)
@@ -79,7 +79,7 @@ custom_levels = os.listdir("custom_levels")
 custom_levels = [custom_levels[i][:-4] for i in range(len(custom_levels))]
 game_levels = os.listdir("game_levels")
 #game_levels = [game_levels[i] for i in range(len(game_levels))]
-current_level = game_levels[0] if len(game_levels)>0 else None
+current_level = game_levels[0] if len(game_levels) > 0 else None
 
 from PlacementFunctions import GameComponent
 from PlacementFunctions import PhysicsEngine
@@ -101,11 +101,12 @@ class Game:
 
     def DisplayLives(self):
         for i in range(self.lives):
-            screen.blit(ball_tex, (10+60*i, 10))
+            screen.blit(ball_tex, (10 + 60 * i, 10))
 
     def CheckState(self):
         if self.lives == 0:
             game.GameState = LOST
+
 
 transparent_background = pygame.Surface((WIDTH, HEIGHT))
 transparent_background.set_alpha(0)
@@ -544,7 +545,7 @@ while loop:
                                     text += event.unicode
                     screen.fill((150, 100, 170))
                     if input_active:
-                        if int(pygame.time.get_ticks()/500)%2 == 0:
+                        if int(pygame.time.get_ticks() / 500) % 2 == 0:
                             txt_surface = font.render(text, True, color_inactive)
                         else:
                             txt_surface = font.render(text + '|', True, color_inactive)
@@ -554,7 +555,7 @@ while loop:
                     title_surface = font.render(enter_level_title, True, color_inactive)
                     input_box.w = max(200, txt_surface.get_width() + 10)
                     screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
-                    screen.blit(title_surface, (WIDTH/2 - title_surface.get_width()/2, input_box.y - 50))
+                    screen.blit(title_surface, (WIDTH / 2 - title_surface.get_width() / 2, input_box.y - 50))
                     pygame.draw.rect(screen, color_inactive, input_box, 2)
                     pygame.display.update()
                 if level_name is not None:
@@ -633,7 +634,7 @@ while loop:
                         shadows[i].resize(1.05)
                     if clicked:
                         game.GameState = RUN_LEVEL
-                        current_level = "game_levels/"+game_levels[i]
+                        current_level = "game_levels/" + game_levels[i]
                 else:
                     if (levels_numbers[i].rect.size[0] / levels_numbers[i].original_rect.size[0] > 0.7):
                         levels_numbers[i].resize(0.97)
@@ -676,9 +677,9 @@ while loop:
         lost_screen = False
 
         lost_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        lost_font = pygame.font.Font( None, 100)
+        lost_font = pygame.font.Font(None, 100)
         lost_text = lost_font.render("YOU LOST", True, (255, 0, 0))
-        lost_surface.blit(lost_text, (WIDTH/2-lost_text.get_width()/2, HEIGHT/2))
+        lost_surface.blit(lost_text, (WIDTH / 2 - lost_text.get_width() / 2, HEIGHT / 2))
 
         canon_pos = (0, 0)
         while game.GameState == RUN_LEVEL:
@@ -717,20 +718,20 @@ while loop:
                     angle = engine.convex_polygons[component.physics_engineID[1]].rotation
                     coeff = pi / 180
                     angle_in_degrees = angle / coeff
-                    if pygame.key.get_pressed()[pygame.K_SPACE]:
-                        if component.flipped == True:
+
+                    if component.flipped:
+                        if pygame.key.get_pressed()[pygame.K_RIGHT]:
                             engine.convex_polygons[component.physics_engineID[1]].Rotate(10 * 1 / 60, pygame.Vector2(
                                 component.rotationcenter))
                         else:
-                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-10 * 1 / 60, pygame.Vector2(
-                                component.rotationcenter))
-                    else:
-                        if component.flipped == True:
                             if angle > 0:
                                 engine.convex_polygons[component.physics_engineID[1]].Rotate(-10 * 1 / 60,
                                                                                              pygame.Vector2(
                                                                                                  component.rotationcenter))
-
+                    if not component.flipped:
+                        if pygame.key.get_pressed()[pygame.K_LEFT]:
+                            engine.convex_polygons[component.physics_engineID[1]].Rotate(-10 * 1 / 60, pygame.Vector2(
+                                component.rotationcenter))
                         else:
                             if angle < 0:
                                 engine.convex_polygons[component.physics_engineID[1]].Rotate(10 * 1 / 60,
@@ -760,9 +761,9 @@ while loop:
             if added_ball:
                 if game.lives <= 0:
                     lost_screen = True
-                if engine.balls[-1].position[1] - ball_radius > HEIGHT and game.lives>=1:
-                    game.lives -=1
-                    if game.lives>0:
+                if engine.balls[-1].position[1] - ball_radius > HEIGHT and game.lives >= 1:
+                    game.lives -= 1
+                    if game.lives > 0:
                         engine.balls[-1].position = canon_pos
                         engine.balls[-1].velocity = (0, -500)
 
@@ -784,11 +785,15 @@ while loop:
         selected_level = [False, None]
 
         custom_levels_play_button = MapObject(custom_levels_play_button_tex, custom_levels_play_button_name, 50, 150,
-                                              (200, 200 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width()))
-        custom_levels_play_button.scale_to_size(((100, 100 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width())))
+                                              (200,
+                                               200 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width()))
+        custom_levels_play_button.scale_to_size(
+            ((100, 100 * custom_levels_play_button_tex.get_height() / custom_levels_play_button_tex.get_width())))
         custom_levels_edit_button = MapObject(custom_levels_edit_button_tex, custom_levels_edit_button_name, 50, 200,
-                                              (200, 200 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
-        custom_levels_edit_button.scale_to_size((100, 100 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
+                                              (200,
+                                               200 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
+        custom_levels_edit_button.scale_to_size(
+            (100, 100 * custom_levels_edit_button_tex.get_height() / custom_levels_edit_button_tex.get_width()))
         level_id = 0
         while game.GameState == MY_LEVELS:
 
@@ -842,19 +847,17 @@ while loop:
                 #current_level = custom_levels[level_id] + '.txt'
                 #game.GameState = LEVEL_EDITOR
 
-
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == pygame.BUTTON_LEFT:
                         if custom_levels_play_button.collidesmouse():
                             if selected_level[1] is not None:
-                                current_level = "custom_levels/"+custom_levels[level_id] + '.txt'
+                                current_level = "custom_levels/" + custom_levels[level_id] + '.txt'
                                 game.GameState = RUN_LEVEL
                         if custom_levels_edit_button.collidesmouse():
                             if selected_level[1] is not None:
-                                current_level = "custom_levels/"+custom_levels[level_id] + '.txt'
+                                current_level = "custom_levels/" + custom_levels[level_id] + '.txt'
                                 game.GameState = LEVEL_EDITOR
-
 
             pygame.display.update()
 
